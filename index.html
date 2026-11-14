@@ -1,0 +1,2444 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#161a1e">
+<title>Imagiclique – Status-Studio</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Playfair+Display:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#0d1012; --surf:#161a1e; --surf2:#1e2429; --line:#2b333a; --fg:#eaeef1; --mut:#98a4ae;
+          --acc:#4ade80; --accc:#12331f; --onacc:#04220e; --onaccc:#d3fbe2; --fg2:#c6ced5; --ink:#fdf8ef; --brand2:#6ee7a0;
+          --recbg:#2a1215; --recfg:#ff8a8d; --press:brightness(1.25); color-scheme:dark; }
+  :root[data-theme=light] { --bg:#f3f6f4; --surf:#ffffff; --surf2:#edf1ef; --line:#d3dad6; --fg:#16201b; --mut:#5d6b64;
+          --acc:#15803d; --accc:#d9f5e3; --onacc:#ffffff; --onaccc:#0d4a24; --fg2:#38443e; --ink:#1c2a22; --brand2:#16a34a;
+          --recbg:#fde8e8; --recfg:#c0262b; --press:brightness(.94); color-scheme:light; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  [hidden] { display:none !important; }
+  html, body { height:100%; }
+  body { margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--fg);
+         display:flex; flex-direction:column; height:100dvh; overflow:hidden; }
+  .wrap { width:100%; max-width:560px; margin:0 auto; }
+  @font-face { font-family:"Josefin Sans"; font-weight:700; font-display:swap;
+               src:url(vendor/josefin-sans-latin-700-normal.woff2) format("woff2"); }
+  .ic { width:22px; height:22px; flex:none; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; }
+  button { font:inherit; color:var(--fg); cursor:pointer; }
+
+  /* Menüleiste */
+  .bar { flex:none; background:var(--surf); padding:calc(6px + env(safe-area-inset-top)) 6px 6px 16px; }
+  .bar .wrap { display:flex; align-items:center; gap:2px; }
+  .brand { margin:0; font:700 22px/1 "Josefin Sans",Inter,system-ui,sans-serif; color:var(--ink); padding-top:4px; cursor:pointer; }
+  .brand b { color:var(--brand2); font-weight:700; }
+  .bar .sub { color:var(--mut); font-size:12px; flex:1; padding-left:8px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .ibtn { width:42px; height:42px; border-radius:50%; border:0; background:none; display:grid; place-items:center; padding:0; flex:none; }
+  .ibtn:active { background:var(--surf2); }
+  #menu { position:fixed; z-index:22; top:calc(52px + env(safe-area-inset-top)); right:max(8px, calc(50vw - 280px)); min-width:230px;
+          background:var(--surf2); border:1px solid var(--line); border-radius:16px; padding:6px; box-shadow:0 12px 32px #0006; }
+  #menu button { display:flex; align-items:center; gap:12px; width:100%; background:none; border:0; border-radius:10px;
+                 padding:12px; font-size:15px; text-align:left; }
+  #menu button:active { filter:var(--press); background:var(--surf); }
+  #menu .mlab { font-size:12px; color:var(--mut); padding:8px 12px 6px; }
+  #menu .seg { padding:0 6px 8px; gap:6px; }
+  #menu .seg button { display:block; text-align:center; padding:9px 2px; font-size:13px; border:1px solid var(--line); background:var(--surf); }
+  #menu .seg button.on { border-color:var(--acc); background:var(--accc); }
+  #menu hr { border:0; border-top:1px solid var(--line); margin:4px 6px; }
+
+  /* Schritte */
+  .steps { flex:none; background:var(--surf); border-bottom:1px solid var(--line); padding:2px 6px 8px; }
+  .steps .wrap { display:flex; }
+  .steps button { flex:1; min-width:0; position:relative; background:none; border:0; padding:2px 0 0; display:flex; flex-direction:column;
+                  align-items:center; gap:3px; font-size:11.5px; color:var(--mut); }
+  .steps button i { width:46px; height:28px; border-radius:14px; display:grid; place-items:center; position:relative; z-index:1; }
+  .steps button .ic { width:19px; height:19px; }
+  .steps button + button::before { content:""; position:absolute; top:15px; left:calc(-50% + 27px); right:calc(50% + 27px);
+                                   height:2px; border-radius:1px; background:var(--line); }
+  .steps button.done { color:var(--fg); }
+  .steps button.done i { color:var(--acc); }
+  .steps button.done + button::before { background:var(--acc); }
+  .steps button.on { color:var(--fg); font-weight:600; }
+  .steps button.on i { background:var(--acc); color:var(--onacc); }
+
+  /* Schaltflächen und Eingaben */
+  .btn { background:var(--surf2); border:1px solid var(--line); border-radius:14px; padding:11px 10px; font-size:14px; min-height:46px;
+         display:inline-flex; align-items:center; justify-content:center; gap:8px; text-align:center; }
+  .btn:active { filter:var(--press); }
+  .btn.primary { background:var(--acc); color:var(--onacc); border-color:var(--acc); font-weight:700; }
+  .btn.tall { flex-direction:column; min-height:84px; gap:6px; font-weight:600; }
+  .btn.tall .ic { width:28px; height:28px; color:var(--acc); }
+  .btn:disabled { opacity:.5; }
+  label { display:block; font-size:12.5px; color:var(--mut); margin:14px 0 6px; }
+  .lab { display:flex; align-items:flex-end; justify-content:space-between; gap:8px; }
+  .lab label, .lab h2 { flex:1; }
+  #clrall { margin-bottom:0; }
+  .lab:has(h2) { margin-bottom:10px; align-items:center; }
+  .mic { display:flex; align-items:center; gap:5px; background:var(--surf2); border:1px solid var(--line); border-radius:999px;
+         padding:5px 12px; font-size:12px; margin-bottom:6px; min-height:32px; }
+  .mic svg { width:14px; height:14px; fill:currentColor; }
+  .mic.on { border-color:#ff5a5f; color:var(--recfg); background:var(--recbg); }
+  input[type=text], textarea { width:100%; background:var(--surf); color:var(--fg); border:1px solid var(--line);
+                               border-radius:14px; padding:12px 13px; font:inherit; font-size:16px; outline:none; }
+  input[type=text]:focus, textarea:focus { border-color:var(--acc); }
+  input[type=range] { width:100%; accent-color:var(--acc); margin:4px 0 0; }
+  .btn:disabled { opacity:.45; }
+  textarea { min-height:150px; resize:vertical; }
+  .row { display:flex; gap:8px; }
+  .row > input { flex:1; min-width:0; }
+  .seg { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+  .seg.one { grid-template-columns:1fr; }
+  .seg.three { grid-template-columns:repeat(3,1fr); }
+  .seg.five { grid-template-columns:repeat(5,1fr); }
+  .seg.six { grid-template-columns:repeat(6,1fr); }
+  .seg button.on { border-color:var(--acc); background:var(--accc); color:var(--onaccc); font-weight:600; }
+  .hint { color:var(--mut); font-size:12px; line-height:1.4; }
+  .warn { margin:2px 0 12px; padding:10px 12px; border-radius:12px; border:1px solid #d9822b; background:#d9822b22; color:var(--fg); font-size:13px; line-height:1.45; }
+  .lead { color:var(--mut); font-size:13.5px; line-height:1.45; margin:4px 0 12px; }
+  .card { background:var(--surf); border:1px solid var(--line); border-radius:16px; padding:13px 14px; margin-top:12px; }
+  .card h3 { margin:0 0 6px; font-size:14px; }
+  .card p, .card li { margin:0; font-size:13px; line-height:1.5; color:var(--fg2); }
+  .card ol, .card ul { margin:0; padding-left:20px; }
+
+  /* Vorschau mit Auswahl daneben (Schritte Vorlage, Stil, Teilen) */
+  /* Die Vorschau bestimmt die Höhe; die Auswahl daneben wird nie höher und lässt sich in sich schieben,
+     damit darunter Platz für die Einstellungen bleibt */
+  .stage { flex:none; padding:12px 14px 2px; --h:min(34dvh, calc((min(100vw, 560px) - 28px) * .52 * 16 / 9)); }
+  .stage .wrap { display:flex; gap:12px; align-items:stretch; }
+  .stage.compact { --h:min(26dvh, 230px); }          /* Schritt Text: kleiner, damit die Felder über der Tastatur bleiben */
+  #cv { height:var(--h); min-height:150px; aspect-ratio:9/16;
+        border-radius:14px; background:#000; box-shadow:0 6px 24px #0005; touch-action:none; flex:none; }
+  .stage .slidenav { justify-content:center; align-items:center; gap:14px; margin-top:4px; font-size:13px; color:var(--fg2); }
+  .stage .slidenav[hidden] { display:none; }
+  .slidenav .btn { min-height:32px; min-width:52px; padding:2px 10px; font-size:20px; line-height:1; }
+  .seqrow { display:flex; gap:8px; margin-top:8px; }
+  .seqrow .btn:first-child { flex:1; min-width:0; text-align:left; padding-left:14px; font-size:13.5px; }
+  .seqrow .btn:last-child { min-width:46px; font-size:18px; }
+  .seqrow .btn.on { border-color:var(--acc); background:var(--accc); color:var(--onaccc); font-weight:600; }
+  .side { flex:1; min-width:0; display:flex; flex-direction:column; overflow-y:auto; max-height:max(var(--h), 150px); padding-bottom:22px;
+          -webkit-mask-image:linear-gradient(#000 calc(100% - 26px), transparent); mask-image:linear-gradient(#000 calc(100% - 26px), transparent); }
+  .side > div { flex:none; }
+  .side label:first-child, .side > div > label:first-child { margin-top:0; }
+  .side .btn { font-size:13.5px; padding:8px 6px; }
+  /* Vorlagen als Kacheln mit kleinem Schemabild */
+  .tiles { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; }
+  .tiles button { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px 2px 6px; min-width:0; background:var(--surf2);
+                  border:1px solid var(--line); border-radius:12px; color:var(--fg); font:inherit; font-size:11px; line-height:1.2; text-align:center; hyphens:manual; }
+  .tiles button.on { border-color:var(--acc); background:var(--accc); color:var(--onaccc); font-weight:600; }
+  .tiles svg { width:30px; height:53px; flex:none; }
+  .swatches { display:flex; gap:10px; flex-wrap:wrap; }
+  .sw { width:40px; height:40px; border-radius:50%; border:3px solid transparent; padding:0; }
+  .sw.on { border-color:var(--fg); }
+  .lays { display:flex; gap:10px; flex-wrap:wrap; }
+  .lay { width:66px; padding:6px; background:var(--surf2); border:2px solid var(--line); border-radius:12px; }
+  .lay.on { border-color:var(--acc); background:var(--accc); }
+  .lay span { display:block; position:relative; aspect-ratio:90/115; }
+  .lay i { position:absolute; background-color:var(--mut); border:1.5px solid transparent; background-clip:padding-box; border-radius:4px; }
+  .lay.on i { background-color:var(--acc); }
+
+  /* Arbeitsbereich */
+  .panels { flex:1; overflow-y:auto; padding:12px 14px 18px; overscroll-behavior:contain; }
+  .panels h2 { margin:2px 0 0; font-size:19px; }
+  .thumbs { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:14px; }
+  .thumb { position:relative; aspect-ratio:1; border-radius:14px; overflow:hidden; background:var(--surf); border:1px solid var(--line); }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .thumb.pick { outline:4px solid var(--acc); outline-offset:-1px; }
+  .thumb b { position:absolute; right:6px; bottom:6px; height:22px; padding:0 8px; border-radius:11px; background:#000b; color:#fff;
+             font-size:11px; font-weight:600; line-height:22px; pointer-events:none; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chips .btn { min-height:38px; padding:6px 14px; font-size:13.5px; }
+  .chips .btn.on { border-color:var(--acc); background:var(--accc); color:var(--onaccc); font-weight:600; }
+  .thumb button { position:absolute; top:5px; right:5px; width:28px; height:28px; border-radius:50%; border:0;
+                  background:#000b; color:#fff; font-size:18px; line-height:1; padding:0; }
+  .thumb em { position:absolute; left:6px; bottom:6px; min-width:22px; height:22px; border-radius:11px; background:#000b; color:#fff;
+              font:600 12px/22px Inter,system-ui,sans-serif; text-align:center; padding:0 6px; }
+  .empty { border:1.5px dashed var(--line); border-radius:16px; padding:26px 16px; text-align:center; color:var(--mut);
+           font-size:13.5px; line-height:1.5; margin-top:14px; }
+  .place { border:1px solid var(--line); border-radius:14px; padding:11px 12px; margin-top:8px; background:var(--surf); }
+  .place h3 { margin:0; font-size:15px; }
+  .place .meta { color:var(--mut); font-size:12px; margin:2px 0 6px; }
+  .place p { margin:0 0 9px; font-size:13px; line-height:1.4; }
+  .place .row .btn { flex:1; min-height:40px; padding:7px 8px; font-size:13px; }
+
+  /* Aktionsleiste */
+  footer { flex:none; border-top:1px solid var(--line); background:var(--surf); padding:10px 14px calc(10px + env(safe-area-inset-bottom)); }
+  footer .wrap { display:flex; gap:10px; }
+  footer .btn { flex:1; min-height:50px; border-radius:25px; font-size:15px; }
+  footer .btn.primary { flex:2.2; }
+  footer #back { flex:none; width:50px; padding:0; }
+
+  /* Hilfe- und Über-Seite */
+  .page { position:fixed; inset:0; z-index:25; background:var(--bg); display:none; flex-direction:column; }
+  .page.on { display:flex; }
+  .page .bar { padding-left:6px; }
+  .page .bar h2 { margin:0; font-size:18px; flex:1; padding-left:6px; }
+  .page .body { flex:1; overflow-y:auto; padding:4px 14px calc(24px + env(safe-area-inset-bottom)); overscroll-behavior:contain; }
+  details { background:var(--surf); border:1px solid var(--line); border-radius:16px; margin-top:10px; }
+  summary { list-style:none; display:flex; align-items:center; gap:10px; padding:14px; font-size:15px; font-weight:600; cursor:pointer; }
+  summary::-webkit-details-marker { display:none; }
+  summary .ic { color:var(--acc); }
+  summary::after { content:""; margin-left:auto; width:8px; height:8px; border-right:2px solid var(--mut); border-bottom:2px solid var(--mut);
+                   transform:rotate(45deg); transition:transform .2s; }
+  details[open] summary::after { transform:rotate(-135deg); }
+  details .in { padding:0 14px 14px; font-size:13.5px; line-height:1.55; color:var(--fg2); }
+  details .in p { margin:0 0 8px; } details .in p:last-child { margin:0; }
+  details .in ul, details .in ol { margin:0 0 8px; padding-left:20px; }
+  details .in b { color:var(--fg); }
+  .about { text-align:center; padding:26px 0 6px; }
+  .about .brand { font-size:38px; cursor:default; }
+  .about p { color:var(--mut); font-size:13.5px; margin:8px 0 0; }
+  .kv { display:flex; justify-content:space-between; gap:12px; font-size:13.5px; padding:5px 0; }
+  .kv span:first-child { color:var(--mut); }
+  .kv span:last-child { text-align:right; }
+
+  #splash { position:fixed; inset:0; z-index:40; background:var(--bg); display:flex; align-items:center; justify-content:center;
+            transition:opacity .45s; }
+  #splash.off { opacity:0; pointer-events:none; }
+  #toast { position:fixed; left:50%; bottom:calc(88px + env(safe-area-inset-bottom)); transform:translateX(-50%);
+           background:#000d; color:#fff; border:1px solid var(--line); border-radius:14px; padding:10px 14px;
+           font-size:13px; max-width:86vw; text-align:center; opacity:0; pointer-events:none; transition:opacity .2s; z-index:35; }
+  #toast.on { opacity:1; }
+  #full { position:fixed; inset:0; background:#000; z-index:30; display:none; align-items:center; justify-content:center; }
+  #full.on { display:flex; }
+  #full img, #full video, #full canvas { max-width:100%; max-height:100%; }
+  #full [hidden] { display:none; }
+  #fullbar { position:absolute; left:50%; transform:translateX(-50%); bottom:calc(14px + env(safe-area-inset-bottom)); display:flex; align-items:center; gap:12px;
+             padding:6px 8px 6px 16px; border-radius:26px; background:#000b; color:#fff; font-size:13px; white-space:nowrap; }
+  #fullspeed { display:flex; gap:4px; }
+  #fullspeed button { min-width:44px; min-height:38px; border-radius:19px; border:1px solid #fff5; background:transparent; color:#fff; font:inherit; font-weight:600; }
+  #fullspeed button.on { background:#fff; color:#000; border-color:#fff; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-photo" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2.5"/><circle cx="8.5" cy="10" r="1.6"/><path d="M21 15.5l-4.5-4.5L8 19"/></symbol>
+  <symbol id="i-text" viewBox="0 0 24 24"><path d="M5 7V5h14v2M12 5v14M9 19h6"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M3.5 10h17M10.5 10v10.5"/></symbol>
+  <symbol id="i-style" viewBox="0 0 24 24"><path d="M12 3.5s6 6.3 6 10.6a6 6 0 0 1-12 0C6 9.8 12 3.5 12 3.5z"/></symbol>
+  <symbol id="i-send" viewBox="0 0 24 24"><path d="M20.5 3.5L3.5 10.5l6.5 3 3 6.5z"/><path d="M20.5 3.5L10 13.5"/></symbol>
+  <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.7 2.2c-.8.5-1.3 1-1.3 2"/><path d="M12 16.9v.1"/></symbol>
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.5v.1"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><path d="M12 5.5v.1M12 12v.1M12 18.5v.1" stroke-width="2.8"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-next" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4.5 8H7l1.8-2.5h6.4L17 8h2.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5v-8A1.5 1.5 0 0 1 4.5 8z"/><circle cx="12" cy="13.2" r="3.3"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/></symbol>
+  <symbol id="i-new" viewBox="0 0 24 24"><path d="M19.5 12a7.5 7.5 0 1 1-2.2-5.3M19.5 4v4.5H15"/></symbol>
+  <symbol id="i-install" viewBox="0 0 24 24"><rect x="6.5" y="2.5" width="11" height="19" rx="2.5"/><path d="M12 8v6M9.5 11.8l2.5 2.5 2.5-2.5"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s6.5-6 6.5-11a6.5 6.5 0 0 0-13 0c0 5 6.5 11 6.5 11z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+</svg>
+
+<header class="bar"><div class="wrap">
+  <h1 class="brand" id="logo" aria-label="Imagiclique">Imagi<b>clique</b></h1><span class="sub">Status-Studio</span>
+  <button class="ibtn" id="peek" aria-label="Vorschau im Vollbild" title="Vorschau"><svg class="ic"><use href="#i-eye"/></svg></button>
+  <button class="ibtn" id="helpbtn" aria-label="Hilfe zu diesem Schritt" title="Hilfe"><svg class="ic"><use href="#i-help"/></svg></button>
+  <button class="ibtn" id="more" aria-label="Menü" aria-haspopup="true" title="Menü"><svg class="ic"><use href="#i-more"/></svg></button>
+</div></header>
+<div id="menu" role="menu" hidden>
+  <button role="menuitem" id="m-fresh"><svg class="ic"><use href="#i-new"/></svg>Neu beginnen</button>
+  <button role="menuitem" id="install" hidden><svg class="ic"><use href="#i-install"/></svg>App installieren</button>
+  <hr>
+  <div class="mlab">Design</div>
+  <div class="seg three" id="theme">
+    <button data-v="auto">Automatisch</button>
+    <button data-v="light">Hell</button>
+    <button data-v="dark">Dunkel</button>
+  </div>
+  <hr>
+  <button role="menuitem" id="m-help"><svg class="ic"><use href="#i-help"/></svg>Hilfe</button>
+  <button role="menuitem" id="m-about"><svg class="ic"><use href="#i-info"/></svg>Über Imagiclique</button>
+</div>
+
+<nav class="steps" aria-label="Arbeitsschritte"><div class="wrap" id="steps">
+  <button data-go="1"><i><svg class="ic"><use href="#i-photo"/></svg></i>Fotos</button>
+  <button data-go="2"><i><svg class="ic"><use href="#i-layout"/></svg></i>Vorlage</button>
+  <button data-go="3"><i><svg class="ic"><use href="#i-text"/></svg></i>Text</button>
+  <button data-go="4"><i><svg class="ic"><use href="#i-style"/></svg></i>Stil</button>
+  <button data-go="5"><i><svg class="ic"><use href="#i-send"/></svg></i>Teilen</button>
+</div></nav>
+
+<section class="stage" data-s="2 3 4 5"><div class="wrap">
+  <canvas id="cv" width="1080" height="1920" aria-label="Vorschau des Statusbilds"></canvas>
+  <div class="side">
+    <div data-s="2">
+      <label>Foto-Darstellung</label>
+      <div class="seg one" id="fit">
+        <button class="btn" data-v="cover">Bildfüllend</button>
+        <button class="btn" data-v="contain">Ganzes Foto</button>
+      </div>
+      <div class="hint" style="margin-top:8px">Bildfüllend schneidet zu – die Vorschau ziehen verschiebt den Ausschnitt.</div>
+    </div>
+    <div data-s="3">
+      <label>Text gilt für</label>
+      <div class="chips" id="textchips"></div>
+      <div class="hint" id="textforhint" style="margin-top:8px"></div>
+      <button class="btn" id="textsame" style="width:100%;margin-top:8px" hidden>Wieder den Text aller Beiträge</button>
+    </div>
+    <div data-s="4">
+      <label>Farbschema</label>
+      <div class="swatches" id="pal"></div>
+      <label>Schrift</label>
+      <div class="seg" id="font">
+        <button class="btn" data-v="sans">Modern</button>
+        <button class="btn" data-v="serif">Elegant</button>
+      </div>
+    </div>
+    <div data-s="5">
+      <label>Ausgabe</label>
+      <div class="seg one" id="motion">
+        <button class="btn" data-v="still">Beiträge einzeln</button>
+        <button class="btn" data-v="video">Alles als ein Video</button>
+      </div>
+      <button class="btn" id="liveplay" style="width:100%;margin-top:8px">Vorschau abspielen</button>
+      <div id="vidopts" hidden>
+        <div id="totalwrap">
+          <label>Gesamtlänge</label>
+          <div class="seg" id="totalsec">
+            <button class="btn" data-v="auto">Auto</button>
+            <button class="btn" data-v="30">30 s</button>
+            <button class="btn" data-v="60">60 s</button>
+            <button class="btn" data-v="90">90 s</button>
+          </div>
+        </div>
+        <div id="slidesecwrap">
+          <label>Dauer je Foto</label>
+          <div class="seg three" id="slidesec">
+            <button class="btn" data-v="2">2 s</button>
+            <button class="btn" data-v="3">3 s</button>
+            <button class="btn" data-v="5">5 s</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="wrap slidenav" id="slidenav" hidden>
+  <button class="btn" id="slideprev" aria-label="Vorheriges Bild">‹</button>
+  <span id="slidelbl"></span>
+  <button class="btn" id="slidenext" aria-label="Nächstes Bild">›</button>
+</div></section>
+
+<main class="panels" id="panels"><div class="wrap">
+  <div data-s="3 5"><div class="warn" id="textwarn" role="status" hidden></div></div>
+  <div data-s="1">
+    <h2>Fotos auswählen</h2>
+    <p class="lead">Bis zu 20 Fotos. Die Reihenfolge bestimmt, welches Foto in welchem Bild landet – auch bei Collage und Diashow.</p>
+    <div class="seg">
+      <button class="btn tall" id="pick"><svg class="ic"><use href="#i-photo"/></svg><span id="picktxt">Fotos wählen</span></button>
+      <button class="btn tall" id="cam"><svg class="ic"><use href="#i-cam"/></svg><span>Kamera</span></button>
+    </div>
+    <div class="hint" id="sorthint" style="margin-top:12px" hidden></div>
+    <div class="thumbs" id="thumbs"></div>
+    <div class="empty" id="nophotos">Noch kein Foto gewählt.<br>Für die Vorlage „Zitat / Text“ brauchst du keines.</div>
+    <div class="hint" style="margin-top:14px">Tipp: In der Galerie Fotos markieren, „Teilen“ antippen und Imagiclique wählen – dann sind sie gleich hier.</div>
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <input type="file" id="camfile" accept="image/*" capture="environment" hidden>
+  </div>
+
+  <div data-s="3">
+    <div class="lab"><h2>Text schreiben</h2>
+      <button class="mic" id="clrall">Alle Texte leeren</button></div>
+    <div class="lab"><label for="title">Titel</label>
+      <button class="mic clr" data-clr="title" aria-label="Titel leeren">Leeren</button>
+      <button class="mic" data-for="title" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2z"/></svg><span>Diktieren</span></button></div>
+    <input type="text" id="title" enterkeyhint="next">
+    <div class="lab"><label for="text">Text (beim Bericht: eine Zeile = ein Punkt)</label>
+      <button class="mic clr" data-clr="text" aria-label="Text leeren">Leeren</button>
+      <button class="mic" data-for="text" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15a3 3 0 0 0 3-3V6a3 3 0 0 0-6 0v6a3 3 0 0 0 3 3zm5-3a5 5 0 0 1-10 0H5a7 7 0 0 0 6 6.92V22h2v-3.08A7 7 0 0 0 19 12h-2z"/></svg><span>Diktieren</span></button></div>
+    <textarea id="text"></textarea>
+    <div class="lab"><label for="footer">Fußzeile</label>
+      <button class="mic clr" data-clr="footer" aria-label="Fußzeile leeren">Leeren</button></div>
+    <input type="text" id="footer" enterkeyhint="done">
+    <div class="card">
+      <h3>Infos zum Ort (aus Wikipedia)</h3>
+      <div class="seg" style="margin-top:10px">
+        <button class="btn" id="geoPhoto">Aufnahmeort des Fotos</button>
+        <button class="btn" id="geoHere">Mein Standort</button>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <input type="text" id="placeq" placeholder="oder Namen suchen, z. B. Heidecksburg" enterkeyhint="search">
+        <button class="btn" id="placego">Suchen</button>
+      </div>
+      <div id="places"></div>
+      <div class="hint" style="margin-top:10px">Dafür wird der Ort bzw. der Suchbegriff an Wikipedia übermittelt. Angaben bitte vor dem Posten prüfen.</div>
+    </div>
+  </div>
+
+  <div data-s="2">
+    <label style="margin-top:2px">Vorlage</label>
+    <div class="tiles" id="tpl"></div>
+    <div id="colopts" hidden>
+      <label id="colnlbl">Anzahl Fotos in der Collage</label>
+      <div class="seg six" id="coln"></div>
+      <div id="collaywrap">
+        <label>Anordnung</label>
+        <div class="lays" id="collay"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Beiträge im Status</h3>
+      <div id="seqauto">
+        <div class="hint" id="seqinfo"></div>
+        <button class="btn" id="seqstart" style="width:100%;margin-top:10px">Beiträge einzeln festlegen</button>
+      </div>
+      <div id="seqbox" hidden>
+        <div id="seqlist"></div>
+        <div class="hint" id="seqnote" style="margin-top:8px"></div>
+        <div class="seg" style="margin-top:10px">
+          <button class="btn" id="seqadd">+ Beitrag hinzufügen</button>
+          <button class="btn" id="seqclear">Wieder alle gleich</button>
+        </div>
+        <div class="hint" style="margin-top:8px">Beitrag antippen und oben seine Vorlage wählen – auch „Diashow“ für ein kurzes Video aus mehreren Fotos. Die Fotos werden der Reihe nach verteilt – umsortieren kannst du sie im Schritt Fotos, einen eigenen Text je Beitrag gibt es im nächsten Schritt.</div>
+      </div>
+    </div>
+  </div>
+
+  <div data-s="4">
+    <div class="hint" style="margin-top:2px">Der Zauber-Schriftzug „Imagiclique“ mit der Adresse imagiclique.de steht unten rechts in jedem Status, auch in der Diashow.</div>
+    <div class="hint" style="margin-top:8px">Farbschema und Schrift gelten für Titel, Text und Hintergrund. Vorschau antippen: Vollbild.</div>
+  </div>
+
+  <div data-s="5">
+    <div id="soundopts" hidden>
+      <div class="hint" id="vidinfo" style="margin-top:2px"></div>
+      <div class="card">
+        <h3>Musik</h3>
+        <div class="seg" style="margin-top:8px">
+          <button class="btn" id="musicpick">Musikdatei wählen</button>
+          <button class="btn" id="musicdel" disabled>Entfernen</button>
+        </div>
+        <div id="musicbox" hidden>
+          <div class="hint" id="musicname" style="margin-top:8px"></div>
+          <label for="musicstart">Beginn im Musikstück: <span id="musicat">0:00</span></label>
+          <input type="range" id="musicstart" min="0" max="0" step="1" value="0">
+          <label>Lautstärke der Musik</label>
+          <div class="seg three" id="musicvol">
+            <button class="btn" data-v="low">leise</button>
+            <button class="btn" data-v="mid">mittel</button>
+            <button class="btn" data-v="high">laut</button>
+          </div>
+        </div>
+        <div class="hint" style="margin-top:8px">Bitte nur eigene oder lizenzfreie Musik verwenden. Sie wird ein- und ausgeblendet und läuft so lange wie das Video.</div>
+      </div>
+      <div class="card" id="voicecard">
+        <h3>Gesprochener Text</h3>
+        <div class="seg" style="margin-top:8px">
+          <button class="btn" id="voicerec">Aufnehmen</button>
+          <button class="btn" id="voicedel" disabled>Löschen</button>
+        </div>
+        <div class="hint" id="voiceinfo" style="margin-top:8px"></div>
+      </div>
+      <button class="btn" id="soundplay" style="width:100%;margin-top:12px" hidden>Ton anhören</button>
+      <input type="file" id="musicfile" accept="audio/*" hidden>
+    </div>
+    <div class="card" style="margin-top:12px">
+      <h3>So kommt es in den Status</h3>
+      <ol>
+        <li>Unten „Teilen“ antippen. Bei Diashow und Video zuerst „erstellen“, dann teilen.</li>
+        <li>Im Android-Menü WhatsApp wählen.</li>
+        <li>„Mein Status“ antippen und senden.</li>
+      </ol>
+    </div>
+    <div class="hint" style="margin-top:12px">„Beiträge einzeln“ teilt jedes Bild als eigenen Status-Beitrag, eine Diashow als kurzes Video. „Alles als ein Video“ macht aus allen Beiträgen ein einziges Video mit Überblendung und leichtem Zoom, auf Wunsch mit Musik und gesprochenem Text.</div>
+    <div class="hint" style="margin-top:8px">Oben und unten bleiben ca. 250 px frei, weil WhatsApp dort Name und Antwortfeld einblendet.</div>
+  </div>
+</div></main>
+
+<footer><div class="wrap">
+  <button class="btn" id="back" aria-label="Zurück" title="Zurück"><svg class="ic"><use href="#i-back"/></svg></button>
+  <button class="btn primary" id="next"><span id="nexttxt">Weiter</span><svg class="ic"><use href="#i-next"/></svg></button>
+  <button class="btn" id="save">Speichern</button>
+  <button class="btn primary" id="share">Teilen · WhatsApp-Status</button>
+</div></footer>
+
+<section class="page" id="help" aria-label="Hilfe">
+  <header class="bar"><div class="wrap">
+    <button class="ibtn" data-close aria-label="Zurück"><svg class="ic"><use href="#i-back"/></svg></button>
+    <h2>Hilfe</h2>
+  </div></header>
+  <div class="body"><div class="wrap">
+    <p class="lead" style="margin-top:14px">Imagiclique führt dich in fünf Schritten vom Foto zum fertigen WhatsApp-Status: erst Fotos und Beiträge festlegen, dann Text, Stil und Ton, zum Schluss in der Vorschau ansehen und teilen. Mit „Weiter“ geht es zum nächsten Schritt; über die Leiste oben kannst du jederzeit springen.</p>
+    <details data-h="1"><summary><svg class="ic"><use href="#i-photo"/></svg>1 · Fotos</summary><div class="in">
+      <p><b>Fotos wählen</b> öffnet die Galerie, <b>Kamera</b> nimmt ein neues Foto auf. Es gehen bis zu 20 Fotos; das × entfernt ein Foto wieder.</p>
+      <p>Die Reihenfolge bestimmt, welches Foto in welchem Bild landet; das Schild „Bild 2“ am Foto zeigt es an. <b>Umsortieren:</b> ein Foto antippen, dann die Stelle antippen, an die es soll.</p>
+      <p><b>Aus der Galerie:</b> Fotos markieren, „Teilen“ antippen und Imagiclique wählen. Das klappt nur, wenn die App installiert ist.</p>
+    </div></details>
+    <details data-h="2"><summary><svg class="ic"><use href="#i-layout"/></svg>2 · Vorlage</summary><div class="in">
+      <ul>
+        <li><b>Foto + Text:</b> ein Foto bildfüllend, Text darüber.</li>
+        <li><b>Bericht:</b> Foto oben, darunter Titel und Stichpunkte (eine Zeile = ein Punkt).</li>
+        <li><b>Collage:</b> 2 bis 12 Fotos, Anzahl und Anordnung sind wählbar. Sind mehr Fotos gewählt, zeigt das Standbild die ersten; die Diashow wechselt gruppenweise durch alle.</li>
+        <li><b>Zitat / Text:</b> nur Text auf farbigem Grund.</li>
+        <li><b>Sofortbild:</b> Foto im weißen Rahmen, der Titel steht als Bildunterschrift darunter.</li>
+        <li><b>Postkarte:</b> Foto oben, darunter Titel und Text wie auf einer Postkarte mit Briefmarke.</li>
+        <li><b>Weißrand:</b> schlicht, Foto auf weißem Grund.</li>
+        <li><b>Filmstreifen:</b> drei Fotos untereinander.</li>
+        <li><b>Vorher / Nachher:</b> zwei Fotos im Vergleich; das erste Foto ist „Vorher“.</li>
+      </ul>
+      <p><b>Diashow:</b> zeigt mehrere Fotos nacheinander als kurzes Video, jedes bildfüllend mit Titel und Text. Die Anzahl der Fotos wählst du darunter, die Dauer je Foto im Schritt Teilen.</p>
+      <p><b>Mehrere Beiträge:</b> Wählst du mehr Fotos, als die Vorlage zeigt, entstehen mehrere Beiträge – zum Beispiel aus 8 Fotos und der Collage mit 4 zwei Bilder. Mit den Pfeilen unter der Vorschau blätterst du, beim Teilen gehen alle zusammen in den Status.</p>
+      <p><b>Beiträge einzeln festlegen:</b> Damit bekommt jeder Beitrag seine eigene Vorlage, etwa erst ein Foto mit Text, dann eine Diashow aus 4 Fotos, dann eine Collage. Beitrag in der Liste antippen und die Vorlage wählen; „+ Beitrag hinzufügen“ ergänzt einen, × entfernt ihn. Die Fotos werden der Reihe nach verteilt.</p>
+      <p><b>Foto-Darstellung</b> (neben der Vorschau): „Bildfüllend“ schneidet zu, „Ganzes Foto“ zeigt das Foto unbeschnitten, die Ränder werden weich aufgefüllt.</p>
+      <p><b>Vorschau ziehen</b> verschiebt den Bildausschnitt, <b>Antippen</b> öffnet das Vollbild. Bei mehreren Beiträgen läuft dort der ganze Status ab.</p>
+    </div></details>
+    <details data-h="3"><summary><svg class="ic"><use href="#i-text"/></svg>3 · Text</summary><div class="in">
+      <p><b>Titel</b>, <b>Text</b> und <b>Fußzeile</b> erscheinen im Bild. Leere Felder werden weggelassen. Die Fußzeile enthält anfangs das Aufnahmedatum des ersten Fotos.</p>
+      <p><b>Langer Text:</b> Passt der Text nicht auf das erste Bild, geht er auf dem nächsten weiter. Reichen die Bilder nicht, erscheint ein Hinweis, ab welcher Stelle Text fehlt – dann den Text kürzen, mehr Fotos wählen oder im Schritt Vorlage ein Bild hinzufügen (zum Beispiel „Zitat / Text“, das kein Foto braucht). Passt der Text ganz auf das erste Bild, steht er wie gewohnt auf jedem Bild.</p>
+      <p><b>Text je Beitrag:</b> Neben der Vorschau steht „Text gilt für“. Mit „Alle Beiträge“ schreibst du den gemeinsamen Text, mit „Beitrag 2“ einen eigenen Titel und Text nur für diesen Beitrag – auch wenn später alles zu einem Video wird. Die Pfeile unter der Vorschau wechseln den Beitrag. Bei einer Diashow läuft ihr Text über ihre Fotos. Die Fußzeile gilt immer für alle.</p>
+      <p><b>Leeren:</b> „Leeren“ löscht ein einzelnes Feld, „Alle Texte leeren“ alle drei. Direkt danach holt „Rückgängig“ den alten Text zurück.</p>
+      <p><b>Diktieren:</b> Knopf antippen und sprechen. Beim Titel wird der Inhalt ersetzt, beim Text wird angehängt. Dafür ist Internet nötig und die App fragt einmal nach dem Mikrofon.</p>
+      <p><b>Infos zum Ort:</b> zeigt Wikipedia-Einträge zum Aufnahmeort des Fotos, zu deinem Standort oder zu einem Suchbegriff. „Titel + Text übernehmen“ setzt beides ein, „Text anhängen“ ergänzt nur den Text.</p>
+      <p>Android entfernt den Aufnahmeort oft, wenn Fotos ausgewählt werden. Dann hilft „Mein Standort“ oder die Suche nach dem Namen.</p>
+    </div></details>
+    <details data-h="4"><summary><svg class="ic"><use href="#i-style"/></svg>4 · Stil</summary><div class="in">
+      <p>Wähle eines der <b>Farbschemata</b> und die <b>Schrift</b>: „Modern“ ist serifenlos, „Elegant“ setzt die Überschrift in einer Serifenschrift.</p>
+      <p><b>Logo im Status:</b> Der Schriftzug „Imagiclique“ mit der Adresse imagiclique.de steht unten rechts in jedem Statusbild.</p>
+    </div></details>
+    <details data-h="5"><summary><svg class="ic"><use href="#i-send"/></svg>5 · Teilen</summary><div class="in">
+      <p><b>Beiträge einzeln:</b> Jedes Bild wird ein eigener Status-Beitrag. „Teilen“ öffnet das Android-Menü; dort WhatsApp wählen, dann „Mein Status“. Ist eine Diashow dabei, zuerst „Diashow erstellen“ antippen – sie wird ein kurzes Video, auf Wunsch mit Musik. WhatsApp nimmt Bilder und Videos nur getrennt an, deshalb teilst du danach in Schritten („Teilen 1 von 3“): Schritt teilen, in WhatsApp in den Status senden, zur App zurückkommen, nächsten Schritt teilen.</p>
+      <p><b>Alles als ein Video:</b> Alle Beiträge werden zu einem Video. Zuerst „Video erstellen“ antippen und warten, bis es fertig ist, danach teilen. Jede Änderung verwirft das Video, dann bitte neu erstellen.</p>
+      <p><b>Vorschau abspielen:</b> zeigt den Status sofort im Vollbild, ohne dass etwas erstellt wird: Bilder stehen je 5 Sekunden, Diashows und das Video laufen ab. Mit 2× oder 4× geht es im Zeitraffer; Ton gibt es nur bei „Alles als ein Video“ mit 1×. Antippen des Bilds schließt die Vorschau. Auf älteren Handys kann sie ruckeln; das fertige Video läuft trotzdem flüssig.</p>
+      <p><b>Gesamtlänge:</b> Bei „Auto“ gilt die Dauer je Foto. Mit 30, 60 oder 90 s verteilt die App die Zeit gleichmäßig auf die Folien; jede steht mindestens 1,5 s. WhatsApp nimmt Status-Videos bis 90 s – was länger wird, teilt die App in mehrere Videos auf, die du zusammen teilst.</p>
+      <p><b>Musik:</b> eine eigene Musikdatei vom Handy wählen, den Beginn im Stück und die Lautstärke einstellen. Bitte nur eigene oder lizenzfreie Musik verwenden.</p>
+      <p><b>Gesprochener Text:</b> „Aufnehmen“ antippen, sprechen, „Stopp“. Ohne feste Gesamtlänge wird das Video so lang wie die Aufnahme; die Musik wird beim Sprechen leiser. „Ton anhören“ spielt die Mischung vorab.</p>
+      <p><b>Speichern</b> legt das Bild oder Video im Ordner „Downloads“ ab.</p>
+      <p>Wer den Status sieht, legst du in WhatsApp fest: Einstellungen → Datenschutz → Status.</p>
+    </div></details>
+    <details><summary><svg class="ic"><use href="#i-install"/></svg>Installieren und aktualisieren</summary><div class="in">
+      <p><b>Installieren:</b> im Menü (⋮) „App installieren“ wählen oder im Chrome-Menü „App installieren“ bzw. „Zum Startbildschirm hinzufügen“.</p>
+      <p><b>Aktualisieren:</b> App ganz schließen und mit Internet neu öffnen. Welche Version läuft, steht unter „Über Imagiclique“; dort gibt es auch „Jetzt aktualisieren“.</p>
+      <p><b>Ohne Internet</b> läuft die App weiter. Nur Diktieren und Infos zum Ort brauchen eine Verbindung.</p>
+    </div></details>
+    <details><summary><svg class="ic"><use href="#i-new"/></svg>Design und Neu beginnen</summary><div class="in">
+      <p><b>Design:</b> Im Menü (⋮) wählst du zwischen hellem und dunklem Design; „Automatisch“ folgt der Einstellung des Handys. Auf das fertige Statusbild hat das keinen Einfluss.</p>
+      <p>„Neu beginnen“ im Menü (⋮) entfernt Fotos und Texte. Vorlage und Stil bleiben erhalten. Texte und Einstellungen merkt sich die App bis zum nächsten Start, Fotos nicht.</p>
+    </div></details>
+  </div></div>
+</section>
+
+<section class="page" id="about" aria-label="Über Imagiclique">
+  <header class="bar"><div class="wrap">
+    <button class="ibtn" data-close aria-label="Zurück"><svg class="ic"><use href="#i-back"/></svg></button>
+    <h2>Über Imagiclique</h2>
+  </div></header>
+  <div class="body"><div class="wrap">
+    <div class="about">
+      <div class="brand">Imagi<b>clique</b></div>
+      <p>Status-Studio für WhatsApp · Teil von Imagi</p>
+    </div>
+    <div class="card">
+      <div class="kv"><span>Version</span><span id="ver"></span></div>
+      <div class="kv"><span>Betrieb</span><span id="runmode"></span></div>
+      <div class="seg" style="margin-top:10px">
+        <button class="btn" id="reload">Jetzt aktualisieren</button>
+        <button class="btn" id="replay">Startanimation</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Deine Daten</h3>
+      <ul>
+        <li>Fotos bleiben auf deinem Gerät und werden nirgends hochgeladen.</li>
+        <li>Texte und Einstellungen liegen nur im Speicher dieser App.</li>
+        <li>„Infos zum Ort“ sendet den Ort oder Suchbegriff an Wikipedia.</li>
+        <li>„Diktieren“ nutzt die Spracherkennung des Browsers; bei Chrome verarbeitet Google die Aufnahme.</li>
+        <li>Musik und Sprachaufnahmen fürs Video bleiben auf deinem Gerät.</li>
+        <li>Schriften und die Bibliothek für Fotodaten werden von Google Fonts und jsDelivr geladen.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Verwendete Bausteine</h3>
+      <ul>
+        <li>mp4-muxer und exifr (MIT-Lizenz)</li>
+        <li>Schriften Josefin Sans, Inter und Playfair Display (SIL Open Font License)</li>
+        <li>Ortstexte aus Wikipedia (CC BY-SA)</li>
+      </ul>
+    </div>
+  </div></div>
+</section>
+
+<div id="splash" aria-hidden="true"><canvas id="splashcv"></canvas></div>
+<div id="toast" role="status"></div>
+<div id="full"><img id="fullimg" alt="Statusbild im Vollbild"><video id="fullvid" playsinline hidden></video>
+  <canvas id="fullcv" width="720" height="1280" aria-label="Vorschau der Diashow" hidden></canvas>
+  <div id="fullbar" hidden>
+    <span id="fulltime">0:00</span>
+    <span id="fullspeed"><button data-v="1" class="on">1×</button><button data-v="2">2×</button><button data-v="4">4×</button></span>
+  </div>
+</div>
+
+<script>
+const W = 1080, H = 1920, SAFE_TOP = 250, SAFE_BOTTOM = 260, PAD = 90, MAX_PHOTOS = 20, MAX_COLLAGE = 12;
+const PALETTES = [
+  { bg1:'#0b3d2e', bg2:'#1f7a52', fg:'#ffffff', acc:'#9ff5c4' },
+  { bg1:'#1b1f3b', bg2:'#4b3f9e', fg:'#ffffff', acc:'#ffcf5c' },
+  { bg1:'#f6efe6', bg2:'#e8d9c4', fg:'#2b2118', acc:'#b5562b' },
+  { bg1:'#111111', bg2:'#333333', fg:'#ffffff', acc:'#ff5a5f' },
+  { bg1:'#e6f2ff', bg2:'#b9d9ff', fg:'#0d2440', acc:'#0a66c2' },
+];
+// Collage-Anordnungen je Fotozahl: Zellen als [x, y, Breite, Höhe] in Anteilen der Collagefläche
+const T = 1 / 3;
+const COLLAGES = {
+  2: [
+    { n:'Übereinander', c:[[0,0,1,.5],[0,.5,1,.5]] },
+    { n:'Nebeneinander', c:[[0,0,.5,1],[.5,0,.5,1]] },
+    { n:'Groß oben, schmal unten', c:[[0,0,1,.64],[0,.64,1,.36]] },
+  ],
+  3: [
+    { n:'Groß oben, zwei unten', c:[[0,0,1,.55],[0,.55,.5,.45],[.5,.55,.5,.45]] },
+    { n:'Groß links, zwei rechts', c:[[0,0,.6,1],[.6,0,.4,.5],[.6,.5,.4,.5]] },
+    { n:'Zwei oben, groß unten', c:[[0,0,.5,.45],[.5,0,.5,.45],[0,.45,1,.55]] },
+    { n:'Drei Streifen', c:[[0,0,1,T],[0,T,1,T],[0,2*T,1,T]] },
+  ],
+  4: [
+    { n:'Raster 2 × 2', c:[[0,0,.5,.5],[.5,0,.5,.5],[0,.5,.5,.5],[.5,.5,.5,.5]] },
+    { n:'Groß oben, drei unten', c:[[0,0,1,.62],[0,.62,T,.38],[T,.62,T,.38],[2*T,.62,T,.38]] },
+    { n:'Groß links, drei rechts', c:[[0,0,.62,1],[.62,0,.38,T],[.62,T,.38,T],[.62,2*T,.38,T]] },
+    { n:'Vier Streifen', c:[[0,0,1,.25],[0,.25,1,.25],[0,.5,1,.25],[0,.75,1,.25]] },
+  ],
+  5: [
+    { n:'Zwei oben, drei unten', c:[[0,0,.5,.56],[.5,0,.5,.56],[0,.56,T,.44],[T,.56,T,.44],[2*T,.56,T,.44]] },
+    { n:'Groß oben, vier unten', c:[[0,0,1,.44],[0,.44,.5,.28],[.5,.44,.5,.28],[0,.72,.5,.28],[.5,.72,.5,.28]] },
+    { n:'Groß in der Mitte', c:[[0,0,.5,.28],[.5,0,.5,.28],[0,.28,1,.44],[0,.72,.5,.28],[.5,.72,.5,.28]] },
+  ],
+  6: [
+    { n:'Raster 2 × 3', c:[[0,0,.5,T],[.5,0,.5,T],[0,T,.5,T],[.5,T,.5,T],[0,2*T,.5,T],[.5,2*T,.5,T]] },
+    { n:'Raster 3 × 2', c:[[0,0,T,.5],[T,0,T,.5],[2*T,0,T,.5],[0,.5,T,.5],[T,.5,T,.5],[2*T,.5,T,.5]] },
+    { n:'Groß oben, zwei, drei', c:[[0,0,1,.42],[0,.42,.5,.3],[.5,.42,.5,.3],[0,.72,T,.28],[T,.72,T,.28],[2*T,.72,T,.28]] },
+  ],
+};
+// 7–12 Fotos: Anordnungen aus Reihen erzeugt, z. B. [2,3,2] = drei Reihen mit 2, 3 und 2 Fotos;
+// eine Reihe mit nur einem Foto wird höher
+function rowsLayout(counts) {
+  const wt = counts.map(n => n === 1 ? 1.5 : 1), sum = wt.reduce((a, b) => a + b, 0), c = [];
+  let y = 0;
+  counts.forEach((n, r) => { const h = wt[r] / sum; for (let i = 0; i < n; i++) c.push([i / n, y, 1 / n, h]); y += h; });
+  return { n: (counts[0] === 1 ? 'Groß oben, dann ' + counts.slice(1).join(' · ') : 'Reihen ' + counts.join(' · ')), c };
+}
+Object.entries({
+  7: [[2,3,2],[1,3,3],[3,4],[2,2,3]], 8: [[2,3,3],[3,2,3],[2,2,2,2],[1,3,4]], 9: [[3,3,3],[2,3,4],[1,4,4],[2,2,2,3]],
+  10: [[3,4,3],[2,3,3,2],[1,3,3,3],[2,2,2,2,2]], 11: [[3,4,4],[2,3,3,3],[1,3,3,4]], 12: [[3,3,3,3],[4,4,4],[2,3,4,3],[1,3,4,4]],
+}).forEach(([n, list]) => { COLLAGES[n] = list.map(rowsLayout); });
+const STORE = 'imagiclique.v1', SHARED_CACHE = 'imagiclique-shared';
+const today = new Date().toLocaleDateString('de-DE', { day:'numeric', month:'long', year:'numeric' });
+const DEFAULTS = {
+  tpl:'photo', pal:0, font:'sans', fx:50, fy:50, footerTouched:false,
+  motion:'still', slideSec:'3', totalSec:'auto', musicVol:'mid', seq:[], own:[], fit:'cover', theme:'auto', colN:4, colLay:{}, colTouched:false,   // colLay: gewählte Anordnung je Fotozahl
+  title:'Sommerfest 2026', text:'Über 120 Gäste\nLive-Musik bis Mitternacht\nDanke an alle Helfer!', footer: today + ' · Imagi',
+};
+const state = { ...DEFAULTS, photos:[] };   // photos: [{ cv, url }] – nicht gespeichert
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE) || '{}');
+  for (const k of Object.keys(DEFAULTS)) if (k in saved) state[k] = saved[k];
+  if (!state.footerTouched) state.footer = DEFAULTS.footer;
+  if (!PALETTES[state.pal]) state.pal = 0;
+  if (!COLLAGES[state.colN]) state.colN = 4;
+  if (!state.colLay || typeof state.colLay !== 'object') state.colLay = {};
+  if (state.fit !== 'contain') state.fit = 'cover';
+  if (!['light', 'dark'].includes(state.theme)) state.theme = 'auto';
+  if (state.motion !== 'video') state.motion = 'still';
+  if (!['2', '3', '5'].includes(state.slideSec)) state.slideSec = '3';
+  if (!['30', '60', '90'].includes(state.totalSec)) state.totalSec = 'auto';
+  if (!['low', 'high'].includes(state.musicVol)) state.musicVol = 'mid';
+} catch (e) {}
+// seq: Bilder einzeln festgelegt, je { tpl, n: Fotos in der Collage, lay: Anordnung }; leer = alle Bilder mit derselben Vorlage
+try {
+  state.seq = (Array.isArray(state.seq) ? state.seq : []).filter(e => e && COLLAGES[e.n])
+    .map(e => ({ tpl: String(e.tpl), n: +e.n, lay: +e.lay || 0 }));
+  // own: eigener Titel und Text je Bild (nach Nummer), null = wie alle Bilder
+  state.own = (Array.isArray(state.own) ? state.own : []).map(o => o && typeof o === 'object' ? { title: String(o.title || ''), text: String(o.text || '') } : null);
+} catch (e) {}
+// bei eigener Festlegung gelten Vorlage und Collage-Einstellung für das gerade gezeigte Bild
+function syncSeq() {
+  if (!state.seq.length) return;
+  editIdx = Math.max(0, Math.min(editIdx, state.seq.length - 1));
+  const e = state.seq[editIdx];
+  e.tpl = state.tpl; e.n = state.colN; e.lay = state.colLay[state.colN] || 0;
+  // ändert sich dadurch die Zahl der Bilder (Diashow), bleibt die Vorschau beim bearbeiteten Beitrag
+  const list = slidesList();
+  if (!list[viewIdx] || list[viewIdx].i !== editIdx) viewIdx = Math.max(0, list.findIndex(sl => sl.i === editIdx));
+}
+function persist() {
+  syncSeq();
+  const o = {}; for (const k of Object.keys(DEFAULTS)) o[k] = state[k];
+  try { localStorage.setItem(STORE, JSON.stringify(o)); } catch (e) {}
+}
+
+const $ = id => document.getElementById(id);
+// Design der Oberfläche: hell, dunkel oder wie am Handy eingestellt (ohne Einfluss auf das Statusbild)
+const darkMq = matchMedia('(prefers-color-scheme: dark)');
+function applyTheme() {
+  const t = state.theme === 'auto' ? (darkMq.matches ? 'dark' : 'light') : state.theme;
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name=theme-color]').content = t === 'light' ? '#ffffff' : '#161a1e';
+}
+darkMq.addEventListener('change', applyTheme);
+applyTheme();
+const cv = $('cv'), mainCtx = cv.getContext('2d');
+let ctx = mainCtx;   // Zeichenziel; die Diashow zeichnet für Überblendungen zeitweise auf eine zweite Fläche
+let anim = null;     // während ein Bild der Folge gezeichnet wird: { off: erstes Foto, zoom }
+let toastTimer;
+function toast(msg, ms = 3200) {
+  $('toast').textContent = msg; $('toast').classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('on'), ms);
+}
+
+// --- Zeichnen ---
+function fam(kind) {
+  if (state.font === 'serif' && kind === 'head') return '"Playfair Display", Georgia, serif';
+  return 'Inter, system-ui, sans-serif';
+}
+function font(weight, size, kind = 'body') { ctx.font = `${weight} ${size}px ${fam(kind)}`; }
+function wrap(text, maxW) {
+  const out = [];
+  for (const para of String(text).split('\n')) {
+    let line = '';
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && line) { out.push(line); line = word; }
+      else line = test;
+    }
+    out.push(line);
+  }
+  return out;
+}
+// zeichnet umbrochenen Text, liefert das neue y
+function textBlock(text, x, y, maxW, lh, align = 'left') {
+  ctx.textAlign = align;
+  const ax = align === 'center' ? x + maxW / 2 : x;
+  for (const l of wrap(text, maxW)) { ctx.fillText(l, ax, y); y += lh; }
+  ctx.textAlign = 'left';
+  return y;
+}
+// wie textBlock, aber höchstens max Zeilen (die letzte endet dann mit …)
+function clampBlock(text, x, y, maxW, lh, max, align = 'left') {
+  let l = wrap(text, maxW);
+  if (l.length > max) { l = l.slice(0, max); l[max - 1] = l[max - 1].replace(/[\s.,;:!?–-]*$/, '') + ' …'; }
+  ctx.textAlign = align;
+  const ax = align === 'center' ? x + maxW / 2 : x;
+  for (const s of l) { ctx.fillText(s, ax, y); y += lh; }
+  ctx.textAlign = 'left';
+  return y;
+}
+// Fließtext der Vorlagen: zeichnet höchstens max Zeilen und merkt sich in spill, was nicht mehr passte.
+// Der Rest läuft auf dem nächsten Bild weiter (siehe flow()); nur wenn kein Bild mehr folgt, endet die letzte Zeile mit …
+let spill = '', moreFollows = false, dry = false;   // dry: nur messen, nichts Sichtbares zeichnen
+function bodyBlock(text, x, y, maxW, lh, max, align = 'left') {
+  const all = [];
+  String(text).split('\n').forEach((para, pi) => {
+    let line = '', any = false;
+    for (const word of para.split(/\s+/).filter(Boolean)) {
+      const test = line ? line + ' ' + word : word;
+      if (ctx.measureText(test).width > maxW && line) { all.push({ s: line, p: pi }); any = true; line = word; }
+      else line = test;
+    }
+    if (line || !any) all.push({ s: line, p: pi });
+  });
+  const n = Math.max(0, Math.min(max, all.length)), rest = all.slice(n);
+  spill = '';
+  rest.forEach((l, i) => { spill += (i ? (l.p === rest[i - 1].p ? ' ' : '\n') : '') + l.s; });
+  spill = spill.replace(/^\s+|\s+$/g, '');
+  ctx.textAlign = align;
+  const ax = align === 'center' ? x + maxW / 2 : x;
+  for (let i = 0; i < n; i++) {
+    const cut = i === n - 1 && spill && !moreFollows;
+    ctx.fillText(cut ? all[i].s.replace(/[\s.,;:!?–-]*$/, '') + ' …' : all[i].s, ax, y); y += lh;
+  }
+  ctx.textAlign = 'left';
+  return y;
+}
+const isDark = c => parseInt(c.slice(1, 3), 16) + parseInt(c.slice(3, 5), 16) + parseInt(c.slice(5, 7), 16) < 384;
+const oneLine = t => t.split('\n').filter(s => s.trim()).join(' · ');
+function bgGradient(p) {
+  if (dry) return;
+  const g = ctx.createLinearGradient(0, 0, W * 0.4, H);
+  g.addColorStop(0, p.bg1); g.addColorStop(1, p.bg2);
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+// wie CSS object-fit: cover, mit Fokuspunkt
+function cover(img, x, y, w, h, r = 0) {
+  if (dry) return;
+  const fx = state.fx / 100, fy = state.fy / 100;
+  const s = Math.max(w / img.width, h / img.height) * (anim ? anim.zoom : 1);
+  const sw = w / s, sh = h / s;
+  const sx = (img.width - sw) * fx, sy = (img.height - sh) * fy;
+  ctx.save();
+  if (r) { roundRect(x, y, w, h, r); ctx.clip(); }
+  ctx.drawImage(img, sx, sy, sw, sh, x, y, w, h);
+  ctx.restore();
+}
+// unbeschnitten wie object-fit: contain; die Ränder füllt eine weichgezeichnete Fassung des Fotos
+function contain(img, x, y, w, h, r = 0) {
+  if (dry) return;
+  ctx.save();
+  roundRect(x, y, w, h, r); ctx.clip();
+  const b = img.blur || img, bs = Math.max(w / b.width, h / b.height);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(b, x + (w - b.width * bs) / 2, y + (h - b.height * bs) / 2, b.width * bs, b.height * bs);
+  ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x, y, w, h);
+  const s = Math.min(w / img.width, h / img.height);
+  ctx.drawImage(img, x + (w - img.width * s) / 2, y + (h - img.height * s) / 2, img.width * s, img.height * s);
+  ctx.restore();
+}
+// Foto je nach Einstellung bildfüllend (Ausschnitt) oder ganz zeigen
+function place(img, x, y, w, h, r = 0) { state.fit === 'contain' ? contain(img, x, y, w, h, r) : cover(img, x, y, w, h, r); }
+function placeholder(x, y, w, h, r, p) {
+  if (dry) return;
+  ctx.save(); roundRect(x, y, w, h, r); ctx.fillStyle = p.fg + '22'; ctx.fill();
+  font(600, w < 360 ? 60 : 34); ctx.fillStyle = p.fg + '99'; ctx.textAlign = 'center';
+  ctx.fillText(w < 360 ? '+' : 'Foto hinzufügen', x + w / 2, y + h / 2 + (w < 360 ? 20 : 12)); ctx.restore();
+}
+function collageCells() {
+  const list = COLLAGES[state.colN];
+  return (list[state.colLay[state.colN] || 0] || list[0]).c;
+}
+function footerLine(p, color) {
+  const f = state.footer.trim(); if (!f) return;
+  font(600, 34); ctx.fillStyle = color || p.fg; ctx.globalAlpha = 0.85;
+  ctx.fillText(f, PAD, H - SAFE_BOTTOM + 20); ctx.globalAlpha = 1;
+}
+let tplInk = null;   // Vorlagen mit eigenem Grund (z. B. Weißrand) setzen hier ihre Schriftfarbe, sonst gilt die des Farbschemas
+// Logo als Wasserzeichen unten rechts: der Zauber-Schriftzug aus imagicosmos/marke/zauber/
+// (Stab tippt aufs g, „clique“ grün), verkleinert in marke/. Auf dunklem Grund und auf Fotos die
+// Fassung mit heller Schrift, auf hellen Farbschemata die mit dunkler Schrift. Darunter die Adresse.
+// Das Wasserzeichen ist die Werbung für die App und deshalb nicht abschaltbar.
+const MARK_W = 380, MARK_URL = 'imagiclique.de', MARK_URL_FONT = '700 30px "Josefin Sans", Inter, system-ui, sans-serif';
+const MARK_IMG = { dunkel: new Image(), hell: new Image() };
+MARK_IMG.dunkel.src = 'marke/zauber-auf-dunkel.png';
+MARK_IMG.hell.src = 'marke/zauber-auf-hell.png';
+Object.values(MARK_IMG).forEach(im => { im.onload = () => render(); });
+if (document.fonts && document.fonts.load) document.fonts.load(MARK_URL_FONT).then(() => render(), () => {});
+function watermark(p) {
+  if (dry) return;
+  const onPhoto = state.tpl === 'photo' && photo(0);
+  const ink = onPhoto ? '#ffffff' : tplInk || p.fg;
+  const lum = parseInt(ink.slice(1, 3), 16) + parseInt(ink.slice(3, 5), 16) + parseInt(ink.slice(5, 7), 16);
+  const img = lum < 384 ? MARK_IMG.hell : MARK_IMG.dunkel;   // dunkle Schrift → heller Grund
+  if (!img.complete || !img.naturalWidth) return;
+  const w = MARK_W, h = w * img.naturalHeight / img.naturalWidth;
+  // Unterkante der Schrift auf Höhe der Fußzeile, die Adresse direkt darunter; ist die Fußzeile zu lang, beides eine Zeile höher
+  let base = H - SAFE_BOTTOM + 20;
+  const f = state.footer.trim();
+  ctx.save();
+  if (f) { font(600, 34); if (PAD + ctx.measureText(f).width + 30 > W - PAD - w) base -= 62; }
+  const y = base - h * .79;                                 // Grundlinie des Schriftzugs liegt bei ca. 79 % der Bildhöhe
+  if (onPhoto) { ctx.shadowColor = 'rgba(0,0,0,.55)'; ctx.shadowBlur = 12; }
+  ctx.globalAlpha = .95;
+  ctx.drawImage(img, W - PAD - w + 8, y, w, h);
+  ctx.font = MARK_URL_FONT; ctx.textAlign = 'right'; ctx.fillStyle = ink; ctx.globalAlpha = .9;
+  ctx.fillText(MARK_URL, W - PAD, base + 50);
+  ctx.restore();
+}
+// im Video rückt die Fotoreihe je Folie weiter und beginnt am Ende wieder von vorn
+// ab dem zweiten Bild rückt die Fotoreihe weiter; reichen die Fotos nicht, geht es vorn wieder los
+const photo = i => {
+  const n = state.photos.length;
+  const p = anim && anim.off && n ? state.photos[(i + anim.off) % n] : state.photos[i];
+  return p && p.cv;
+};
+
+const TEMPLATES = {
+  photo(p) {
+    const img = photo(0);
+    if (img) place(img, 0, 0, W, H); else { bgGradient(p); placeholder(PAD, 500, W - 2 * PAD, 700, 40, p); }
+    const g = ctx.createLinearGradient(0, H * 0.45, 0, H);
+    g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,0.85)');
+    ctx.fillStyle = g; ctx.fillRect(0, H * 0.45, W, H * 0.55);
+    font(800, 92, 'head'); const tl = wrap(state.title, W - 2 * PAD);
+    // der Text wächst von unten nach oben, höchstens bis etwa zur Bildmitte
+    font(400, 44); const bmax = Math.max(1, Math.floor((720 - tl.length * 104) / 60));
+    const bn = Math.min(bmax, wrap(state.text, W - 2 * PAD).length);
+    let y = H - SAFE_BOTTOM - 85 - bn * 60 - tl.length * 104;   // die letzte Zeile endet über dem Wasserzeichen
+    ctx.fillStyle = p.acc; ctx.fillRect(PAD, y - 40, 120, 10);
+    ctx.fillStyle = '#fff'; font(800, 92, 'head'); y = textBlock(state.title, PAD, y + 60, W - 2 * PAD, 104);
+    font(400, 44); ctx.fillStyle = '#ffffffdd'; bodyBlock(state.text, PAD, y + 10, W - 2 * PAD, 60, bmax);
+    footerLine(p, '#ffffff');
+  },
+  report(p) {
+    bgGradient(p);
+    let y = SAFE_TOP;
+    font(800, 30); ctx.fillStyle = p.acc; ctx.fillText('BERICHT', PAD, y);
+    font(800, 84, 'head'); ctx.fillStyle = p.fg; y = textBlock(state.title, PAD, y + 100, W - 2 * PAD, 96);
+    const ph = 640;
+    if (photo(0)) place(photo(0), PAD, y + 10, W - 2 * PAD, ph, 36);
+    else placeholder(PAD, y + 10, W - 2 * PAD, ph, 36, p);
+    y += ph + 100;
+    font(400, 46);
+    // Stichpunkte, solange Platz ist; ein zu langer Punkt wird geteilt, der Rest steht auf dem nächsten Bild
+    const items = state.text.split('\n').filter(s => s.trim()), last = H - SAFE_BOTTOM - 60;
+    let k = 0, rest = '';
+    for (; k < items.length; k++) {
+      const room = Math.floor((last - y) / 60) + 1;
+      if (room < 1) break;
+      ctx.fillStyle = p.acc; ctx.beginPath(); ctx.arc(PAD + 12, y - 15, 11, 0, 7); ctx.fill();
+      ctx.fillStyle = p.fg; y = bodyBlock(items[k].trim(), PAD + 50, y, W - 2 * PAD - 50, 60, room) + 22;
+      if (spill) { rest = spill; k++; break; }
+    }
+    spill = [rest, ...items.slice(k)].filter(Boolean).join('\n');
+    footerLine(p);
+  },
+  collage(p) {
+    bgGradient(p);
+    const top = SAFE_TOP - 40, gap = 20, areaH = 1150, w = W - 2 * PAD, e = 1e-6;
+    collageCells().forEach(([cx, cy, cw, ch], i) => {
+      // halber Abstand an jeder Kante, die nicht am Rand der Collagefläche liegt
+      const x0 = PAD + cx * w + (cx > e ? gap / 2 : 0), x1 = PAD + (cx + cw) * w - (cx + cw < 1 - e ? gap / 2 : 0);
+      const y0 = top + cy * areaH + (cy > e ? gap / 2 : 0), y1 = top + (cy + ch) * areaH - (cy + ch < 1 - e ? gap / 2 : 0);
+      photo(i) ? place(photo(i), x0, y0, x1 - x0, y1 - y0, 28) : placeholder(x0, y0, x1 - x0, y1 - y0, 28, p);
+    });
+    let y = top + areaH + 110;
+    font(800, 80, 'head'); ctx.fillStyle = p.fg; y = textBlock(state.title, PAD, y, w, 92);
+    font(400, 42); ctx.fillStyle = p.fg; ctx.globalAlpha = .85;
+    const room = Math.floor((H - SAFE_BOTTOM - 30 - (y + 10)) / 56) + 1;   // nur so viele Zeilen, wie über der Fußzeile Platz haben
+    bodyBlock(oneLine(state.text), PAD, y + 10, w, 56, Math.max(0, Math.min(2, room))); ctx.globalAlpha = 1;
+    footerLine(p);
+  },
+  quote(p) {
+    bgGradient(p);
+    if (photo(0)) { ctx.globalAlpha = .18; cover(photo(0), 0, 0, W, H); ctx.globalAlpha = 1; }
+    font(800, 360, 'head'); ctx.fillStyle = p.acc; ctx.fillText('“', PAD - 10, 640);
+    font(600, 70, 'head'); ctx.fillStyle = p.fg;
+    const body = state.text.replace(/\n/g, ' ');
+    const lines = Math.min(9, wrap(body, W - 2 * PAD).length);
+    let y = Math.max(720, (H - lines * 92) / 2);
+    y = bodyBlock(body, PAD, y, W - 2 * PAD, 92, 9);
+    font(800, 44); ctx.fillStyle = p.acc; ctx.fillText('— ' + state.title, PAD, y + 50);
+    footerLine(p);
+  },
+  // Sofortbild: weißer Rahmen leicht gedreht, Titel als Bildunterschrift
+  polaroid(p) {
+    bgGradient(p);
+    const cw = 820, ch = 1010, m = 44, ph = 760, ink = '#26221d';
+    ctx.save(); ctx.translate(W / 2, SAFE_TOP + 10 + ch / 2); ctx.rotate(-0.03);
+    ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 40; ctx.shadowOffsetY = 14;
+    ctx.fillStyle = '#fdfcf8'; ctx.fillRect(-cw / 2, -ch / 2, cw, ch);
+    ctx.shadowColor = 'transparent';
+    const x = -cw / 2 + m, y = -ch / 2 + m, w = cw - 2 * m;
+    if (photo(0)) place(photo(0), x, y, w, ph); else placeholder(x, y, w, ph, 0, { fg: ink });
+    font(700, 56, 'head'); ctx.fillStyle = ink;
+    const two = wrap(state.title, w).length > 1;
+    clampBlock(state.title, x, y + ph + (two ? 80 : 114), w, 66, 2, 'center');
+    ctx.restore();
+    font(400, 44); ctx.fillStyle = p.fg; ctx.globalAlpha = .9;
+    bodyBlock(state.text, PAD, SAFE_TOP + ch + 120, W - 2 * PAD, 60, 4); ctx.globalAlpha = 1;
+    footerLine(p);
+  },
+  // Postkarte: Foto oben, darunter Schreibfeld mit Briefmarke, Stempel und Adresslinien
+  postcard(p) {
+    bgGradient(p);
+    const x = PAD - 30, y = SAFE_TOP - 20, w = W - 2 * PAD + 60, h = 1340, m = 34, ph = 720, ink = '#2b2118', paper = '#fbf6ea';
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 36; ctx.shadowOffsetY = 12;
+    roundRect(x, y, w, h, 18); ctx.fillStyle = paper; ctx.fill(); ctx.restore();
+    if (photo(0)) place(photo(0), x + m, y + m, w - 2 * m, ph, 8); else placeholder(x + m, y + m, w - 2 * m, ph, 8, { fg: ink });
+    const ty = y + m + ph, split = x + w * .62;
+    // Briefmarke mit gezacktem Rand
+    const sw = 170, sh = 210, sx = x + w - m - sw, sy = ty + 40;
+    ctx.fillStyle = isDark(p.bg1) ? p.bg1 : p.acc; ctx.fillRect(sx, sy, sw, sh);
+    ctx.fillStyle = paper;
+    for (let i = 0; i <= 8; i++) for (const yy of [sy, sy + sh]) { ctx.beginPath(); ctx.arc(sx + i * sw / 8, yy, 9, 0, 7); ctx.fill(); }
+    for (let i = 0; i <= 10; i++) for (const xx of [sx, sx + sw]) { ctx.beginPath(); ctx.arc(xx, sy + i * sh / 10, 9, 0, 7); ctx.fill(); }
+    ctx.strokeStyle = paper; ctx.lineWidth = 4; ctx.strokeRect(sx + 24, sy + 24, sw - 48, sh - 48);
+    ctx.font = '700 38px "Josefin Sans", Inter, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('Imagi', sx + sw / 2, sy + sh / 2 + 14); ctx.textAlign = 'left';
+    // Poststempel
+    ctx.save(); ctx.strokeStyle = ink; ctx.globalAlpha = .4; ctx.lineWidth = 4;
+    for (const r of [78, 58]) { ctx.beginPath(); ctx.arc(sx - 40, sy + sh - 30, r, 0, 7); ctx.stroke(); }
+    for (let i = 0; i < 4; i++) {
+      ctx.beginPath();
+      for (let k = 0; k <= 40; k++) { const px = sx + 30 + k * 4, py = sy + sh - 70 + i * 26 + Math.sin(k / 3) * 6; k ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+      ctx.stroke();
+    }
+    ctx.restore();
+    // Trennlinie und Adresslinien rechts
+    ctx.save(); ctx.strokeStyle = ink; ctx.globalAlpha = .3; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(split, ty + 40); ctx.lineTo(split, y + h - m); ctx.stroke();
+    for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(split + 30, ty + 370 + i * 70); ctx.lineTo(x + w - m, ty + 370 + i * 70); ctx.stroke(); }
+    ctx.restore();
+    // Titel und Text links
+    const tw = split - 30 - (x + m);
+    font(800, 54, 'head'); ctx.fillStyle = ink;
+    const yy = clampBlock(state.title, x + m, ty + 100, tw, 64, 2);
+    font(400, 38); ctx.globalAlpha = .85;
+    bodyBlock(state.text, x + m, yy + 6, tw, 52, Math.max(1, Math.floor((y + h - m - yy) / 52)));
+    ctx.globalAlpha = 1;
+    footerLine(p);
+  },
+  // Weißrand: Foto mit breitem weißem Rand, schlicht
+  minimal(p) {
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, W, H); tplInk = '#1d1d1f';
+    const x = 70, y = SAFE_TOP - 20, w = W - 140, h = 1060;
+    if (photo(0)) place(photo(0), x, y, w, h); else placeholder(x, y, w, h, 0, { fg: tplInk });
+    font(800, 70, 'head'); ctx.fillStyle = tplInk;
+    const ty = clampBlock(state.title, x + 20, y + h + 108, w - 40, 82, 2);
+    font(400, 40); ctx.fillStyle = '#5a5a60';
+    bodyBlock(oneLine(state.text), x + 20, ty, w - 40, 54, 2);
+    footerLine(p, '#5a5a60');
+  },
+  // Filmstreifen: drei Fotos untereinander auf dunklem Streifen mit Lochreihen
+  film(p) {
+    bgGradient(p);
+    const sw = 760, sx = (W - sw) / 2, sy = SAFE_TOP - 50, sh = 1180, edge = 74, n = 3, gap = 22;
+    ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.4)'; ctx.shadowBlur = 36; ctx.shadowOffsetY = 12;
+    ctx.fillStyle = '#141414'; ctx.fillRect(sx, sy, sw, sh); ctx.restore();
+    ctx.fillStyle = '#e9e6df';
+    for (let yy = sy + 18; yy < sy + sh - 30; yy += 54) {
+      roundRect(sx + 22, yy, 30, 34, 7); ctx.fill(); roundRect(sx + sw - 52, yy, 30, 34, 7); ctx.fill();
+    }
+    const fh = (sh - (n + 1) * gap) / n, fw = sw - 2 * edge;
+    for (let i = 0; i < n; i++) {
+      const fy = sy + gap + i * (fh + gap);
+      photo(i) ? place(photo(i), sx + edge, fy, fw, fh, 6) : placeholder(sx + edge, fy, fw, fh, 6, { fg: '#ffffff' });
+    }
+    font(800, 76, 'head'); ctx.fillStyle = p.fg;
+    const ty = clampBlock(state.title, PAD, sy + sh + 110, W - 2 * PAD, 88, 2);
+    font(400, 42); ctx.globalAlpha = .85;
+    bodyBlock(oneLine(state.text), PAD, ty + 4, W - 2 * PAD, 56, ty < H - SAFE_BOTTOM - 60 ? 1 : 0);
+    ctx.globalAlpha = 1;
+    footerLine(p);
+  },
+  // Vorher / Nachher: zwei Fotos übereinander mit Schild
+  compare(p) {
+    bgGradient(p);
+    const top = SAFE_TOP - 40, gap = 20, areaH = 1150, w = W - 2 * PAD, ch = (areaH - gap) / 2;
+    ['VORHER', 'NACHHER'].forEach((t, i) => {
+      const y = top + i * (ch + gap);
+      photo(i) ? place(photo(i), PAD, y, w, ch, 28) : placeholder(PAD, y, w, ch, 28, p);
+      font(800, 30); const tw = ctx.measureText(t).width + 48;
+      roundRect(PAD + 24, y + 24, tw, 58, 29); ctx.fillStyle = p.bg1; ctx.globalAlpha = .88; ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = p.acc; ctx.fillText(t, PAD + 48, y + 64);
+    });
+    let y = top + areaH + 110;
+    font(800, 80, 'head'); ctx.fillStyle = p.fg; y = clampBlock(state.title, PAD, y, w, 92, 2);
+    font(400, 42); ctx.globalAlpha = .85;
+    bodyBlock(oneLine(state.text), PAD, y + 10, w, 56, y < H - SAFE_BOTTOM - 60 ? 1 : 0);
+    ctx.globalAlpha = 1;
+    footerLine(p);
+  },
+};
+
+
+function paint() {
+  spill = '';
+  ctx.clearRect(0, 0, W, H);
+  ctx.textBaseline = 'alphabetic';
+  tplInk = null;
+  (TEMPLATES[state.tpl] || TEMPLATES.photo)(PALETTES[state.pal]);
+  watermark(PALETTES[state.pal]);
+}
+// --- Beiträge im Status ---
+// Ein Status besteht aus einem oder mehreren Beiträgen (entries): Bilder mit einer Vorlage oder eine Diashow
+// (tpl 'show') aus n Fotos. Ohne eigene Festlegung (state.seq leer) bekommt jeder Beitrag dieselbe Vorlage und es
+// entstehen so viele, wie die Fotos füllen; sonst gilt state.seq.
+// slidesList() liefert daraus die einzelnen Bilder (im Video: Folien); eine Diashow ergibt je Foto ein Bild der
+// Vorlage „Foto + Text“. Jedes Bild: { i: Nummer des Beitrags, key: laufende Nummer, tpl, n, lay, off: erstes Foto,
+// need: Zahl der Fotos, show: Teil einer Diashow }
+const need = (tpl, n) => tpl === 'collage' || tpl === 'show' ? n : ({ film: 3, compare: 2, quote: 0 })[tpl] ?? 1;
+// passender Beitrag für „left“ noch freie Fotos: die gewünschte Vorlage, wenn die Fotos reichen; Collage und Diashow
+// sonst mit weniger Fotos, bei nur einem Foto „Foto + Text“; ohne freies Foto eine Textseite
+function fitEntry(tpl, n, lay, left) {
+  if (need(tpl, n) <= left) return { tpl, n, lay };
+  if (left < 1) return { tpl: 'quote', n, lay: 0 };
+  if ((tpl === 'collage' || tpl === 'show') && left >= 2) return { tpl, n: left, lay: 0 };
+  return { tpl: 'photo', n, lay: 0 };
+}
+function entries() {
+  if (state.seq.length) return state.seq;
+  const cnt = state.photos.length, per = need(state.tpl, state.colN), lay = state.colLay[state.colN] || 0;
+  if (!per || cnt <= per) return [{ tpl: state.tpl, n: state.colN, lay }];
+  const out = [];
+  for (let used = 0; used < cnt; used += need(out[out.length - 1].tpl, out[out.length - 1].n)) out.push(fitEntry(state.tpl, state.colN, lay, cnt - used));
+  return out;
+}
+function slidesList() {
+  const out = []; let off = 0;
+  entries().forEach((e, i) => {
+    const k = need(e.tpl, e.n);
+    if (e.tpl === 'show') for (let j = 0; j < k; j++) out.push({ i, key: out.length, tpl: 'photo', n: e.n, lay: 0, off: off + j, need: 1, show: true });
+    else out.push({ i, key: out.length, tpl: e.tpl, n: e.n, lay: e.lay, off, need: k, show: false });
+    off += k;
+  });
+  return out;
+}
+// zeichnet ein Bild der Folge; Vorlage und Collage-Einstellung gelten nur für diesen Aufruf
+function drawSlide(sl, zoom = 1, target = mainCtx, part = null) {
+  const keep = [state.tpl, state.colN, state.colLay, state.title, state.text], o = state.own[sl.i];
+  if (!part) part = flow().parts[sl.key];                     // Anteil dieses Bilds am Text
+  state.tpl = sl.tpl; state.colN = sl.n; state.colLay = { [sl.n]: sl.lay };
+  if (o) { state.title = o.title; state.text = o.text; }      // eigener Text dieses Beitrags
+  if (part) state.text = part.text;
+  moreFollows = !!part && part.more;
+  ctx = target; anim = { off: sl.off, zoom };
+  try { paint(); } finally { [state.tpl, state.colN, state.colLay, state.title, state.text] = keep; ctx = mainCtx; anim = null; moreFollows = false; }
+}
+// Textfluss: Passt ein Text nicht auf das erste Bild, läuft er auf den folgenden weiter; passt er ganz aufs erste,
+// steht er wie bisher auf jedem Bild. Der gemeinsame Text läuft über alle Bilder ohne eigenen Text, der eigene Text
+// eines Beitrags über dessen Bilder (bei einer Diashow über ihre Fotos).
+// Ergebnis: parts[key] = { text, more } je Bild; rest = was nirgends mehr Platz hat (restAt: Beitrag, -1 = gemeinsamer
+// Text). Gemessen wird ohne zu zeichnen.
+let flowCache = null, measureCtx = null;
+function flow() {
+  if (flowCache && flowCache.rev === shotRev) return flowCache;
+  if (!measureCtx) measureCtx = document.createElement('canvas').getContext('2d');
+  const all = slidesList(), parts = [];
+  const run = (list, text) => {
+    let rest = text;
+    for (const [k, sl] of list.entries()) {
+      const part = { text: rest, more: k < list.length - 1 };
+      drawSlide(sl, 1, measureCtx, part);
+      if (!k && !spill) { list.forEach(x => { parts[x.key] = { text, more: false }; }); return ''; }
+      parts[sl.key] = part; rest = spill;
+    }
+    list.forEach((sl, k) => { const next = list[k + 1] && parts[list[k + 1].key]; parts[sl.key].more = !!next && !!next.text; });
+    return rest;                                              // „more“ nur, wenn danach wirklich noch Text kommt
+  };
+  let rest = '', restAt = -1;
+  dry = true;
+  try {
+    rest = run(all.filter(sl => !state.own[sl.i]), state.text);
+    state.own.forEach((o, i) => {
+      const grp = o ? all.filter(sl => sl.i === i) : [];
+      if (!grp.length) return;
+      const r = run(grp, o.text);
+      if (r && !rest) { rest = r; restAt = i; }
+    });
+  } finally { dry = false; }
+  return flowCache = { rev: shotRev, parts, rest, restAt };
+}
+let viewIdx = 0, editIdx = 0;   // viewIdx: Bild in der Vorschau; editIdx: Beitrag, der bei eigener Festlegung bearbeitet wird
+function drawStill() {
+  const list = slidesList();
+  viewIdx = Math.max(0, Math.min(viewIdx, list.length - 1));
+  drawSlide(list[viewIdx]);
+}
+let pending = false;
+function render() {
+  syncSeq();
+  shotRev++; prepareShot(); syncButtons(); seqUI();
+  if (pending) return;
+  pending = true;
+  requestAnimationFrame(() => {
+    pending = false;
+    if (!recording) drawStill();   // die laufende Video-Erzeugung bricht bei Änderungen selbst ab und zeichnet neu
+  });
+}
+
+// --- Bedienung ---
+const segMarks = {};
+function seg(id, key, after) {
+  const mark = segMarks[id] = () => [...$(id).children].forEach(c => c.classList.toggle('on', c.dataset.v === state[key]));
+  $(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    state[key] = b.dataset.v; mark(); if (after) after(); persist(); render();
+  });
+  mark();
+}
+// Collage: Fotozahl und Anordnung (kleine Schemabilder aus COLLAGES)
+function collageUI() {
+  const isShow = state.tpl === 'show';
+  $('colopts').hidden = state.tpl !== 'collage' && !isShow;
+  $('colnlbl').textContent = isShow ? 'Anzahl Fotos in der Diashow' : 'Anzahl Fotos in der Collage';
+  $('collaywrap').hidden = isShow;
+  $('coln').innerHTML = ''; $('collay').innerHTML = '';
+  Object.keys(COLLAGES).forEach(k => {
+    const n = +k, b = document.createElement('button');
+    b.className = 'btn' + (n === state.colN ? ' on' : ''); b.textContent = n;
+    b.setAttribute('aria-label', n + ' Fotos');
+    b.onclick = () => { state.colN = n; state.colTouched = true; collageUI(); persist(); render(); };
+    $('coln').appendChild(b);
+  });
+  const cur = state.colLay[state.colN] || 0;
+  COLLAGES[state.colN].forEach((l, i) => {
+    const b = document.createElement('button'), box = document.createElement('span');
+    b.className = 'lay' + (i === cur ? ' on' : ''); b.title = l.n; b.setAttribute('aria-label', l.n);
+    l.c.forEach(([x, y, w, h]) => {
+      const c = document.createElement('i');
+      c.style.cssText = `left:${x * 100}%;top:${y * 100}%;width:${w * 100}%;height:${h * 100}%`;
+      box.appendChild(c);
+    });
+    b.appendChild(box);
+    b.onclick = () => { state.colLay[state.colN] = i; collageUI(); persist(); render(); };
+    $('collay').appendChild(b);
+  });
+}
+// Solange die Fotozahl nicht von Hand gewählt wurde, folgt sie der Zahl der geladenen Fotos
+function autoCount() {
+  if (!state.seq.length && !state.colTouched && state.photos.length >= 2) state.colN = Math.min(MAX_COLLAGE, state.photos.length);
+  collageUI();
+}
+// Vorlagen-Kacheln: [Kennung, Name, Beschriftung der Kachel, Schemabild]
+const TPLS = [
+  ['photo', 'Foto + Text', 'Foto + Text', '<rect x="3" y="3" width="30" height="58" rx="3" opacity=".3"/><rect x="7" y="42" width="16" height="4"/><rect x="7" y="50" width="22" height="2"/><rect x="7" y="54" width="18" height="2"/>'],
+  ['report', 'Bericht', 'Bericht', '<rect x="6" y="6" width="18" height="4"/><rect x="6" y="14" width="24" height="18" rx="2" opacity=".35"/><circle cx="8" cy="40" r="1.6"/><rect x="12" y="39" width="18" height="2"/><circle cx="8" cy="47" r="1.6"/><rect x="12" y="46" width="15" height="2"/><circle cx="8" cy="54" r="1.6"/><rect x="12" y="53" width="17" height="2"/>'],
+  ['collage', 'Collage', 'Collage', '<g opacity=".35"><rect x="6" y="6" width="11" height="17" rx="2"/><rect x="19" y="6" width="11" height="17" rx="2"/><rect x="6" y="25" width="11" height="17" rx="2"/><rect x="19" y="25" width="11" height="17" rx="2"/></g><rect x="6" y="48" width="18" height="4"/><rect x="6" y="55" width="22" height="2"/>'],
+  ['quote', 'Zitat / Text', 'Zitat / Text', '<path d="M7 12h5l-2 8H6zM15 12h5l-2 8h-4z"/><rect x="6" y="27" width="24" height="3"/><rect x="6" y="34" width="20" height="3"/><rect x="6" y="41" width="22" height="3"/><rect x="6" y="50" width="12" height="2" opacity=".6"/>'],
+  ['polaroid', 'Sofortbild', 'Sofort&shy;bild', '<rect x="5" y="8" width="26" height="32" rx="1" opacity=".3" transform="rotate(-4 18 24)"/><rect x="8" y="11" width="20" height="20" opacity=".45" transform="rotate(-4 18 24)"/><rect x="6" y="47" width="22" height="2"/><rect x="6" y="52" width="18" height="2"/>'],
+  ['postcard', 'Postkarte', 'Post&shy;karte', '<rect x="4" y="8" width="28" height="44" rx="2" opacity=".25"/><rect x="7" y="11" width="22" height="20" opacity=".45"/><rect x="7" y="35" width="10" height="3"/><rect x="7" y="41" width="12" height="2"/><rect x="7" y="45" width="9" height="2"/><rect x="23" y="35" width="6" height="8"/>'],
+  ['minimal', 'Weißrand', 'Weiß&shy;rand', '<rect x="3" y="3" width="30" height="58" rx="3" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/><rect x="7" y="9" width="22" height="30" opacity=".4"/><rect x="7" y="44" width="16" height="4"/><rect x="7" y="51" width="20" height="2"/>'],
+  ['film', 'Filmstreifen', 'Film&shy;streifen', '<rect x="8" y="5" width="20" height="40" opacity=".3"/><g opacity=".6"><rect x="12" y="8" width="12" height="10"/><rect x="12" y="20" width="12" height="10"/><rect x="12" y="32" width="12" height="10"/></g><rect x="6" y="50" width="18" height="4"/><rect x="6" y="57" width="14" height="2"/>'],
+  ['compare', 'Vorher / Nachher', 'Vorher / Nachher', '<g opacity=".35"><rect x="6" y="6" width="24" height="18" rx="2"/><rect x="6" y="26" width="24" height="18" rx="2"/></g><rect x="8" y="8" width="8" height="3" rx="1.5"/><rect x="8" y="28" width="8" height="3" rx="1.5"/><rect x="6" y="50" width="18" height="4"/>'],
+  ['show', 'Diashow', 'Diashow', '<rect x="10" y="6" width="22" height="38" rx="2" opacity=".2"/><rect x="7" y="9" width="22" height="38" rx="2" opacity=".3"/><rect x="4" y="12" width="22" height="38" rx="2" opacity=".45"/><path d="M11 24v14l10-7z"/><rect x="4" y="55" width="16" height="2"/>'],
+];
+const TPL_NAMES = {};
+TPLS.forEach(([v, name, label, icon]) => {
+  TPL_NAMES[v] = name;
+  const b = document.createElement('button'); b.dataset.v = v; b.setAttribute('aria-label', name);
+  b.innerHTML = `<svg viewBox="0 0 36 64" fill="currentColor" aria-hidden="true">${icon}</svg><span>${label}</span>`;
+  $('tpl').appendChild(b);
+});
+const motionUI = () => {};   // Sichtbarkeit der Video-Einstellungen regelt videoInfo() bei jedem render()
+seg('tpl', 'tpl', collageUI); seg('font', 'font'); seg('fit', 'fit'); collageUI();
+seg('motion', 'motion', motionUI); seg('slidesec', 'slideSec'); seg('totalsec', 'totalSec'); seg('musicvol', 'musicVol');
+PALETTES.forEach((p, i) => {
+  const s = document.createElement('button');
+  s.className = 'sw' + (i === state.pal ? ' on' : '');
+  s.setAttribute('aria-label', 'Farbschema ' + (i + 1));
+  s.style.background = `linear-gradient(135deg, ${p.bg1}, ${p.bg2} 60%, ${p.acc})`;
+  s.onclick = () => { state.pal = i; [...$('pal').children].forEach((c, j) => c.classList.toggle('on', j === i)); persist(); render(); };
+  $('pal').appendChild(s);
+});
+// Titel und Text gelten für alle Bilder oder – wenn im Schritt Text ein Bild gewählt ist – nur für dieses (state.own)
+let textFor = -1;   // -1 = alle Bilder, sonst Nummer des Bilds
+['title', 'text', 'footer'].forEach(id => {
+  $(id).value = state[id];
+  $(id).addEventListener('input', () => {
+    if (textFor >= 0 && id !== 'footer') {
+      const o = state.own[textFor] || (state.own[textFor] = { title: state.title, text: state.text });
+      o[id] = $(id).value;
+    } else state[id] = $(id).value;
+    if (id === 'footer') state.footerTouched = true;
+    persist(); render();
+  });
+});
+function loadTextFields() {
+  const o = textFor >= 0 ? state.own[textFor] : null;
+  $('title').value = o ? o.title : state.title; $('text').value = o ? o.text : state.text;
+}
+function setTextFor(j) {
+  textFor = j; dropUndo(); loadTextFields();
+  if (j >= 0) { editIdx = j; viewIdx = Math.max(0, slidesList().findIndex(sl => sl.i === j)); }
+  loadEntry(); render();
+}
+function textForUI(count) {
+  if (textFor >= count) { textFor = -1; loadTextFields(); }
+  const box = $('textchips'); box.innerHTML = '';
+  for (let j = -1; j < count; j++) {
+    if (j >= 0 && count < 2) break;
+    const b = document.createElement('button');
+    b.className = 'btn' + (j === textFor ? ' on' : '');
+    b.textContent = j < 0 ? (count < 2 ? 'Ganzer Status' : 'Alle Beiträge') : `Beitrag ${j + 1}${state.own[j] ? ' •' : ''}`;
+    b.onclick = () => setTextFor(j);
+    box.appendChild(b);
+  }
+  const own = textFor >= 0 && !!state.own[textFor];
+  $('textsame').hidden = !own;
+  $('textforhint').textContent = count < 2 ? 'Legst du im Schritt Vorlage mehrere Beiträge an, kann jeder seinen eigenen Text bekommen.'
+    : textFor < 0 ? 'Dieser Text steht auf allen Beiträgen ohne eigenen Text. Ein Punkt markiert Beiträge mit eigenem Text.'
+    : own ? `Beitrag ${textFor + 1} hat einen eigenen Titel und Text.` : `Beitrag ${textFor + 1} zeigt den gemeinsamen Text. Sobald du unten etwas änderst, gilt es nur für diesen Beitrag.`;
+}
+$('textsame').onclick = () => { state.own[textFor] = null; setTextFor(textFor); persist(); };
+
+// Bilder im Status: Anzeige, Blättern und eigene Festlegung je Bild
+const span = (a, k) => k < 1 ? 'ohne Foto' : k === 1 ? 'Foto ' + (a + 1) : `Fotos ${a + 1}–${a + k}`;
+// wie span, nennt aber nur Fotos, die es gibt
+function spanHave(a, k, n) {
+  if (k < 1) return 'ohne Foto';
+  const have = Math.max(0, Math.min(k, n - a));
+  return !have ? (k === 1 ? 'Foto fehlt' : `${k} Fotos fehlen`) : have === k ? span(a, k) : `${span(a, have)}, ${k - have} ${k - have === 1 ? 'fehlt' : 'fehlen'}`;
+}
+function seqUI() {
+  const list = slidesList(), ents = entries(), n = state.photos.length, own = state.seq.length > 0;
+  const i = Math.max(0, Math.min(viewIdx, list.length - 1)), cur = list[i].i;
+  $('slidenav').hidden = list.length < 2;
+  $('slidelbl').textContent = `Bild ${i + 1} von ${list.length}` + (list[i].show ? ' · Diashow' : '');
+  $('seqauto').hidden = own; $('seqbox').hidden = !own;
+  textForUI(ents.length);
+  const fl = flow(), left = fl.rest;
+  $('textwarn').hidden = !left;
+  if (left) $('textwarn').textContent = (fl.restAt >= 0 ? `Der Text von Beitrag ${fl.restAt + 1} passt nicht ganz.` : `Der Text passt nicht ganz auf ${list.length > 1 ? 'die ' + list.length + ' Bilder' : 'das Bild'}.`)
+    + ` Es fehlt ab: „${left.replace(/\s+/g, ' ').slice(0, 60)}${left.length > 60 ? ' …' : ''}“. Kürze den Text, wähle mehr Fotos oder füge im Schritt Vorlage einen Beitrag hinzu.`;
+  if (!own) {
+    $('seqinfo').textContent = ents.length > 1
+      ? `${n} Fotos ergeben mit dieser Vorlage ${ents.length} ${state.tpl === 'show' ? 'Diashows' : 'Bilder'}. Sie werden zusammen geteilt.`
+      : state.tpl === 'show' ? 'Die Diashow zeigt die Fotos nacheinander als kurzes Video. Mit „Beiträge einzeln festlegen“ mischst du sie mit Bildern.'
+      : 'Wählst du mehr Fotos, als die Vorlage zeigt, entstehen automatisch mehrere Bilder.';
+    return;
+  }
+  $('seqlist').innerHTML = '';
+  let off = 0;
+  ents.forEach((e, j) => {
+    const k = need(e.tpl, e.n), row = document.createElement('div'); row.className = 'seqrow';
+    const b = document.createElement('button'); b.className = 'btn' + (j === cur ? ' on' : '');
+    b.textContent = `${j + 1} · ${TPL_NAMES[e.tpl] || e.tpl}${e.tpl === 'collage' || e.tpl === 'show' ? ' (' + e.n + ')' : ''} · ${spanHave(off, k, n)}`;
+    b.onclick = () => viewEntry(j);
+    const x = document.createElement('button'); x.className = 'btn'; x.textContent = '×'; x.setAttribute('aria-label', `Beitrag ${j + 1} entfernen`);
+    x.onclick = () => {
+      state.seq.splice(j, 1); state.own.splice(j, 1);
+      if (state.seq.length) viewEntry(Math.min(editIdx > j ? editIdx - 1 : editIdx, state.seq.length - 1)); else view(0);
+    };
+    row.append(b, x); $('seqlist').appendChild(row);
+    off += k;
+  });
+  $('seqnote').textContent = off < n ? `Noch in keinem Beitrag: ${span(off, n - off)}.`
+    : off > n ? `Die Beiträge brauchen ${off} Fotos, gewählt sind ${n}. Fehlende Plätze füllen Fotos vom Anfang – oder beim Beitrag weniger Fotos wählen.` : 'Alle Fotos sind verteilt.';
+}
+// bei eigener Festlegung: Vorlage und Collage-Einstellung des bearbeiteten Beitrags zum Bearbeiten laden
+function loadEntry() {
+  if (!state.seq.length) return;
+  editIdx = Math.max(0, Math.min(editIdx, state.seq.length - 1));
+  const e = state.seq[editIdx];
+  state.tpl = e.tpl; state.colN = e.n; state.colLay[e.n] = e.lay;
+  if (segMarks.tpl) segMarks.tpl();
+  collageUI();
+}
+// zeigt Bild j der Folge
+function view(j) {
+  const list = slidesList(), k = list.length;
+  viewIdx = ((j % k) + k) % k; editIdx = list[viewIdx].i;
+  if (textFor >= 0 && textFor !== editIdx) { textFor = editIdx; dropUndo(); loadTextFields(); }
+  loadEntry(); persist(); render();
+}
+// zeigt das erste Bild von Beitrag j
+function viewEntry(j) {
+  editIdx = j; loadEntry();
+  viewIdx = Math.max(0, slidesList().findIndex(sl => sl.i === editIdx));
+  persist(); render();
+}
+$('slideprev').onclick = () => view(viewIdx - 1);
+$('slidenext').onclick = () => view(viewIdx + 1);
+$('seqstart').onclick = () => {
+  const list = slidesList(), at = list[Math.min(viewIdx, list.length - 1)].i;
+  state.seq = entries().map(e => ({ tpl: e.tpl, n: e.n, lay: e.lay })); viewEntry(at);
+};
+$('seqadd').onclick = () => {
+  const used = state.seq.reduce((a, e) => a + need(e.tpl, e.n), 0), left = state.photos.length - used;
+  const e = fitEntry(state.tpl, state.colN, state.colLay[state.colN] || 0, left);
+  state.seq.push(e); viewEntry(state.seq.length - 1);
+  if (left < 1) toast('Alle Fotos sind schon verteilt – der neue Beitrag ist eine Textseite ohne Foto.', 5000);
+  else if (e.tpl !== 'quote' && need(e.tpl, e.n) < left) toast(`Der neue Beitrag nimmt ${span(used, need(e.tpl, e.n))}.`);
+};
+$('seqclear').onclick = () => { state.seq = []; view(0); };
+loadEntry();
+
+// --- Arbeitsschritte: Fotos → Text → Vorlage → Stil → Teilen ---
+// Elemente mit data-s="3 4" sind nur in diesen Schritten sichtbar.
+const STEPS = ['Fotos', 'Vorlage', 'Text', 'Stil', 'Teilen'];
+let step = 1;
+function go(n) {
+  step = Math.max(1, Math.min(STEPS.length, n));
+  document.querySelectorAll('[data-s]').forEach(el => { el.hidden = !el.dataset.s.split(' ').includes(String(step)); });
+  [...$('steps').children].forEach((b, i) => {
+    b.classList.toggle('on', i + 1 === step); b.classList.toggle('done', i + 1 < step);
+    if (i + 1 === step) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+  });
+  const last = step === STEPS.length;
+  $('back').hidden = step === 1; $('next').hidden = last; $('save').hidden = $('share').hidden = !last;
+  if (!last) $('nexttxt').textContent = 'Weiter: ' + STEPS[step];
+  $('panels').scrollTop = 0;
+  document.querySelector('.stage').classList.toggle('compact', STEPS[step - 1] === 'Text');
+  if (step === 1) drawThumbs();                      // die Schilder „Bild 2“ hängen von der Vorlage ab
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+$('steps').addEventListener('click', e => { const b = e.target.closest('button'); if (b) go(+b.dataset.go); });
+$('back').onclick = () => go(step - 1);
+$('next').onclick = () => go(step + 1);
+
+// --- Ebenen über der App (Hilfe, Über, Vollbild): die Zurück-Taste des Handys schließt sie ---
+let layer = null;
+function hideLayer() {
+  if (!layer) return;
+  $(layer).classList.remove('on');
+  if (layer === 'full') { stopLive(); $('fullvid').pause(); if (!$('fullimg').hidden) URL.revokeObjectURL($('fullimg').src); }
+  layer = null;
+}
+function openLayer(id) {
+  if (layer === id) return;
+  if (layer) hideLayer(); else history.pushState({ layer: 1 }, '');
+  layer = id; $(id).classList.add('on');
+}
+function closeLayer() { if (layer) history.back(); }
+window.addEventListener('popstate', hideLayer);
+document.querySelectorAll('[data-close]').forEach(b => { b.onclick = closeLayer; });
+function openHelp() {
+  document.querySelectorAll('#help details').forEach(d => { d.open = d.dataset.h === String(step); });
+  openLayer('help'); $('help').querySelector('.body').scrollTop = 0;
+}
+
+// --- Menü ---
+$('theme').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  e.stopPropagation();                                   // Menü bleibt offen, damit man das Ergebnis sieht
+  state.theme = b.dataset.v; applyTheme(); markTheme(); persist();
+});
+const markTheme = () => [...$('theme').children].forEach(c => c.classList.toggle('on', c.dataset.v === state.theme));
+markTheme();
+$('more').onclick = e => { e.stopPropagation(); $('menu').hidden = !$('menu').hidden; };
+document.addEventListener('click', () => { $('menu').hidden = true; });
+$('helpbtn').onclick = openHelp;
+$('m-help').onclick = openHelp;
+$('m-about').onclick = () => openLayer('about');
+$('peek').onclick = () => openPreview();
+$('m-fresh').onclick = () => {
+  if (!confirm('Fotos und Texte verwerfen und neu beginnen?')) return;
+  state.photos.forEach(p => URL.revokeObjectURL(p.url)); state.photos = [];
+  state.title = ''; state.text = ''; state.footer = DEFAULTS.footer; state.footerTouched = false;
+  state.fx = 50; state.fy = 50; state.colTouched = false; state.seq = []; state.own = []; viewIdx = 0; editIdx = 0; textFor = -1;
+  ['title', 'text', 'footer'].forEach(id => { $(id).value = state[id]; });
+  $('placeq').value = ''; $('places').innerHTML = '';
+  autoCount(); drawThumbs(); persist(); render(); go(1);
+};
+$('reload').onclick = async () => {
+  try { const r = await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) {}
+  location.reload();
+};
+$('runmode').textContent = matchMedia('(display-mode: standalone)').matches ? 'als App installiert' : 'im Browser';
+
+// --- Fotos ---
+async function toPhoto(file) {
+  const url = URL.createObjectURL(file);
+  const img = new Image(); img.src = url;
+  try { await img.decode(); } catch (e) { URL.revokeObjectURL(url); return null; }
+  // Handyfotos verkleinern, damit die Vorschau flüssig bleibt und auch 20 Fotos in den Speicher passen
+  // (kurze Seite höchstens 1440 px; das Statusbild ist 1080 px breit)
+  const s = Math.min(1, 1440 / Math.min(img.naturalWidth, img.naturalHeight), 3200 / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas');
+  c.width = Math.max(1, Math.round(img.naturalWidth * s)); c.height = Math.max(1, Math.round(img.naturalHeight * s));
+  c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+  // winzige Fassung: stark vergrößert gezeichnet ergibt sie den weichen Hintergrund für „Ganzes Foto“
+  const bs = 36 / Math.max(c.width, c.height), b = document.createElement('canvas');
+  b.width = Math.max(1, Math.round(c.width * bs)); b.height = Math.max(1, Math.round(c.height * bs));
+  const bx = b.getContext('2d'); bx.imageSmoothingQuality = 'high'; bx.drawImage(c, 0, 0, b.width, b.height);
+  c.blur = b;
+  return { cv: c, url };
+}
+// Antippen wählt ein Foto, Antippen eines zweiten setzt es an dessen Stelle; das Schild zeigt, in welchem Bild es landet
+let pickIdx = -1;
+function drawThumbs() {
+  $('thumbs').innerHTML = '';
+  if (pickIdx >= state.photos.length) pickIdx = -1;
+  const list = slidesList(), n = state.photos.length;
+  state.photos.forEach((p, i) => {
+    const d = document.createElement('div'); d.className = 'thumb' + (i === pickIdx ? ' pick' : '');
+    const im = new Image(); im.src = p.url; im.alt = 'Foto ' + (i + 1);
+    im.onclick = () => {
+      if (pickIdx < 0) pickIdx = i;
+      else if (pickIdx === i) pickIdx = -1;
+      else { state.photos.splice(i, 0, state.photos.splice(pickIdx, 1)[0]); pickIdx = -1; state.fx = 50; state.fy = 50; render(); }
+      drawThumbs();
+    };
+    const no = document.createElement('em'); no.textContent = i + 1;
+    if (list.length > 1) {
+      const sl = list.find(sl => sl.need && i >= sl.off && i < sl.off + sl.need);
+      const tag = document.createElement('b'); tag.textContent = sl ? 'Bild ' + (sl.i + 1) : '–'; d.appendChild(tag);
+    }
+    const x = document.createElement('button'); x.textContent = '×'; x.setAttribute('aria-label', 'Foto ' + (i + 1) + ' entfernen');
+    x.onclick = () => { URL.revokeObjectURL(p.url); state.photos.splice(i, 1); pickIdx = -1; autoCount(); drawThumbs(); persist(); render(); };
+    d.append(im, no, x); $('thumbs').appendChild(d);
+  });
+  $('picktxt').textContent = state.photos.length ? 'Fotos hinzufügen' : 'Fotos wählen';
+  $('nophotos').hidden = state.photos.length > 0; $('thumbs').hidden = !state.photos.length;
+  $('sorthint').hidden = n < 2;
+  $('sorthint').textContent = pickIdx >= 0 ? `Foto ${pickIdx + 1} ist gewählt – jetzt die Stelle antippen, an die es soll.`
+                                           : 'Reihenfolge ändern: Foto antippen, dann die Stelle antippen, an die es soll.';
+}
+async function addFiles(files) {
+  const list = [...files].filter(f => !f.type || f.type.startsWith('image/'));
+  if (!list.length) return;
+  const free = MAX_PHOTOS - state.photos.length;
+  if (free <= 0) { toast(`Höchstens ${MAX_PHOTOS} Fotos. Bitte zuerst eines entfernen.`); return; }
+  const wasEmpty = !state.photos.length;
+  const done = [];                                  // nacheinander, damit viele große Fotos den Speicher nicht sprengen
+  for (const f of list.slice(0, free)) {
+    if (list.length > 3) $('picktxt').textContent = `Lade ${done.length + 1} von ${Math.min(free, list.length)} …`;
+    done.push(await toPhoto(f));
+  }
+  const ok = done.filter(Boolean);
+  done.forEach((p, i) => { if (p) readGps(list[i], p); });
+  state.photos.push(...ok);
+  if (wasEmpty && ok.length) { state.fx = 50; state.fy = 50; exifDate(list[done.findIndex(Boolean)]); }
+  autoCount(); drawThumbs(); persist(); render();
+  if (ok.length < done.length) toast('Ein Foto konnte nicht gelesen werden (z. B. HEIC).');
+  else if (list.length > free) toast(`Höchstens ${MAX_PHOTOS} Fotos – die übrigen wurden ausgelassen.`);
+}
+$('pick').onclick = () => $('file').click();
+$('cam').onclick = () => $('camfile').click();
+$('file').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+$('camfile').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); addFiles(e.dataTransfer.files); });
+
+// Aufnahmedatum aus EXIF in die Fußzeile, solange sie nicht von Hand geändert wurde
+let exifrReady = null;
+function loadExifr() {
+  if (!exifrReady) exifrReady = new Promise(res => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/exifr@7/dist/lite.umd.js';
+    s.onload = () => res(window.exifr || null); s.onerror = () => res(null);
+    document.head.appendChild(s);
+  });
+  return exifrReady;
+}
+// Aufnahmeort aus EXIF am Foto merken (für „Infos zum Ort“); fehlt oft, weil Android ihn beim Auswählen entfernt
+async function readGps(file, p) {
+  try {
+    const exifr = await loadExifr(); if (!exifr) return;
+    const g = await exifr.gps(file);
+    if (g && isFinite(g.latitude) && isFinite(g.longitude)) p.gps = { lat: g.latitude, lon: g.longitude };
+  } catch (e) {}
+}
+async function exifDate(file) {
+  if (state.footerTouched || !file) return;
+  try {
+    const exifr = await loadExifr(); if (!exifr) return;
+    const t = await exifr.parse(file, ['DateTimeOriginal']);
+    if (!t || !t.DateTimeOriginal || state.footerTouched) return;
+    const d = new Date(t.DateTimeOriginal); if (isNaN(d)) return;
+    state.footer = d.toLocaleDateString('de-DE', { day:'numeric', month:'long', year:'numeric' }) + ' · Imagi';
+    $('footer').value = state.footer; render();
+  } catch (e) {}
+}
+
+// --- Vorschau: ziehen = Ausschnitt, tippen = Vollbild ---
+let drag = null;
+cv.addEventListener('pointerdown', e => { drag = { x: e.clientX, y: e.clientY, moved: false }; cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!drag.moved && Math.hypot(dx, dy) < 6) return;
+  drag.moved = true; drag.x = e.clientX; drag.y = e.clientY;
+  const r = cv.getBoundingClientRect();
+  state.fx = Math.max(0, Math.min(100, state.fx - dx / r.width * 120));
+  state.fy = Math.max(0, Math.min(100, state.fy - dy / r.height * 120));
+  render();
+});
+cv.addEventListener('pointerup', async () => {
+  const d = drag; drag = null;
+  if (!d) return;
+  if (d.moved) { persist(); return; }
+  openPreview();
+});
+// Vollbild-Vorschau: ein einzelnes Bild steht still; mehrere Bilder, Diashows und das Video laufen ab wie später im Status
+async function openPreview(finished = true) {
+  if (recording) { toast('Das Video wird gerade erstellt.'); return; }
+  const vid = state.motion === 'video';
+  if (finished && vid && videoReady()) { showVideo(); return; }
+  const plan = curPlan();
+  if (vid ? state.photos.length : plan.parts.length > 1 || !plan.parts[0].still) { startLive(plan); return; }
+  const blob = await exportBlob();
+  $('fullvid').hidden = true; $('fullimg').hidden = false;
+  $('fullimg').src = URL.createObjectURL(blob); openLayer('full');
+}
+cv.addEventListener('pointercancel', () => { drag = null; });
+$('full').onclick = closeLayer;
+
+// --- Ausgabe ---
+function exportBlob() {
+  drawStill();
+  return new Promise(r => cv.toBlob(r, 'image/jpeg', 0.92));
+}
+// alle Bilder des Status als JPEG, abseits der Vorschau gezeichnet; null, wenn sich währenddessen etwas ändert
+let expCv = null;
+function stillBlob(sl) {
+  if (!expCv) { expCv = document.createElement('canvas'); expCv.width = W; expCv.height = H; }
+  drawSlide(sl, 1, expCv.getContext('2d'));
+  return new Promise(r => expCv.toBlob(r, 'image/jpeg', 0.92));
+}
+async function exportBlobs(rev) {
+  const out = [];
+  for (const sl of slidesList()) {
+    out.push(await stillBlob(sl));
+    if (rev != null && rev !== shotRev) return null;
+  }
+  return out;
+}
+const shotFiles = blobs => blobs.map((b, i) => new File([b], fileName('jpg', blobs.length > 1 ? `_${i + 1}von${blobs.length}` : ''), { type: 'image/jpeg' }));
+function fileName(ext = 'jpg', part = '') {
+  const n = (state.title || 'status').replace(/[^\wäöüÄÖÜß-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'status';
+  return `imagi_${n}${part}.${ext}`;
+}
+function saveBlob(blob, name = fileName()) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+$('save').onclick = async () => {
+  if (needMake()) {
+    if (videoReady()) {
+      video.files.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 400));
+      toast(video.files.length > 1 ? `${video.files.length} Dateien gespeichert (Downloads).` : 'Video gespeichert (Downloads).');
+    }
+    return;
+  }
+  const files = shotFiles(await exportBlobs());
+  files.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 400));
+  toast(files.length > 1 ? `${files.length} Bilder gespeichert (Downloads).` : 'Bild gespeichert (Downloads).');
+};
+// Das JPEG wird nach jeder Änderung im Voraus erzeugt: navigator.share() muss direkt im Tipp
+// aufgerufen werden, nach einem await auf toBlob() gilt der Tipp auf Android nicht mehr als Geste.
+let shot = null, shotRev = 0, shotTimer = 0;
+function prepareShot() {
+  clearTimeout(shotTimer);
+  shotTimer = setTimeout(async () => {
+    if (recording || needMake()) return;
+    const rev = shotRev;
+    const blobs = await exportBlobs(rev);
+    if (blobs && rev === shotRev) shot = { rev, files: shotFiles(blobs) };
+  }, 250);
+}
+$('share').onclick = async () => {
+  if (needMake()) {
+    if (!videoReady()) { makeVideo(); return; }
+    // die Dateien liegen bereit, deshalb kann direkt im Tipp geteilt werden – in Schritten, nie Bilder und Videos gemischt
+    const groups = shareGroups(video.files), k = shareAt();
+    if (navigator.canShare && navigator.canShare({ files: groups[k] })) {
+      try {
+        await navigator.share({ files: groups[k] });
+        shareStep = { rev: shotRev, k: k + 1 };
+        if (groups.length > 1) toast(k + 1 < groups.length
+          ? `Schritt ${k + 1} von ${groups.length} übergeben. Wenn er im Status ist, hierher zurückkommen und den nächsten teilen.`
+          : 'Das war der letzte Schritt. Noch einmal antippen beginnt wieder beim ersten.', 7000);
+        syncButtons();
+      }
+      catch (e) { if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt: ' + e.message); }
+    } else {
+      video.files.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 400));
+      toast(`Teilen wird in diesem Browser nicht unterstützt – ${video.files.length > 1 ? 'die Dateien wurden' : 'das Video wurde'} gespeichert.`, 5000);
+    }
+    return;
+  }
+  let files = shot && shot.rev === shotRev ? shot.files : null;
+  if (!files) {
+    const rev = shotRev;
+    files = shotFiles(await exportBlobs());
+    if (rev === shotRev) shot = { rev, files };
+  }
+  const many = files.length > 1;
+  if (navigator.canShare && navigator.canShare({ files })) {
+    try { await navigator.share({ files }); }
+    catch (e) {
+      if (e.name === 'NotAllowedError') toast(`${many ? 'Die Bilder sind' : 'Das Bild ist'} jetzt bereit – bitte noch einmal auf Teilen tippen.`, 5000);
+      else if (e.name !== 'AbortError') toast('Teilen hat nicht geklappt: ' + e.message);
+    }
+  } else {
+    files.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 400));
+    toast(`Teilen wird in diesem Browser nicht unterstützt – ${many ? 'die Bilder wurden' : 'das Bild wurde'} gespeichert.`, 5000);
+  }
+};
+
+// --- Diashow als Video ---
+// Bild für Bild gerechnet (WebCodecs + mp4-muxer), dadurch unabhängig vom Tempo des Geräts.
+// Ohne WebCodecs/H.264 nimmt ersatzweise MediaRecorder die Vorschau in Echtzeit auf (dann ohne Ton).
+const VID_W = 720, VID_H = 1280, FPS = 30, FADE = 0.6;
+const MAX_PART = 90, MIN_SLIDE = 1.5;    // WhatsApp nimmt Status-Videos bis 90 s; kürzer als 1,5 s steht keine Folie
+const AUDIO_SR = 48000, VOICE_AT = 0.4;  // die Sprachaufnahme setzt kurz nach dem Anfang ein
+let recording = false, video = null;     // video: { rev, files[], urls[], secs }
+const sound = { music: null, voice: null };   // music: { buf, name, start }, voice: { buf } – nicht gespeichert
+const videoReady = () => !!video && video.rev === shotRev;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const secText = v => String(Math.round(v * 10) / 10).replace('.', ',') + ' s';
+const clock = v => Math.floor(v / 60) + ':' + String(Math.floor(v % 60)).padStart(2, '0');
+
+// Ablauf des Videos: Folien, Standzeit je Folie, Gesamtlänge und Aufteilung in Teile von höchstens 90 s.
+// Vorrang hat die gewählte Gesamtlänge, dann die Länge der Sprachaufnahme, sonst gilt „Dauer je Foto“.
+function videoPlan() {
+  const list = slidesList(), slides = list.length;
+  const voice = sound.voice ? sound.voice.buf.duration + VOICE_AT + 0.6 : 0;
+  const fixed = state.totalSec !== 'auto' ? +state.totalSec : 0, want = fixed || voice;
+  let D, total;
+  if (want) { D = Math.max(MIN_SLIDE, want / slides); total = slides * D; }
+  else { D = +state.slideSec; total = slides > 1 ? slides * D : Math.max(5, 2 * D); }
+  if (slides === 1) D = total;
+  const np = Math.max(1, Math.ceil(slides / Math.max(1, Math.floor(MAX_PART / D + 1e-9))));
+  const parts = [];
+  for (let i = 0, from = 0; i < np; i++) {
+    const count = Math.floor(slides / np) + (i < slides % np ? 1 : 0);
+    parts.push({ from, count, secs: count * D }); from += count;
+  }
+  return { list, slides, D, total, parts, fixed, byVoice: !fixed && voice > 0, over: fixed > 0 && total > fixed + 0.05 };
+}
+// „Beiträge einzeln“ mit mindestens einer Diashow: Bilder bleiben Bilder, jede Diashow wird ein eigenes Video.
+// Der Ablauf dient auch der Vorschau; dort steht jedes Bild so lange, wie WhatsApp ein Statusbild zeigt.
+const STILL_SECS = 5;
+function mixedPlan() {
+  const list = slidesList(), D = +state.slideSec, parts = [];
+  for (let a = 0; a < list.length;) {
+    if (!list[a].show) { parts.push({ from: a, count: 1, secs: STILL_SECS, D: STILL_SECS, still: true }); a++; continue; }
+    let b = a; while (b < list.length && list[b].show && list[b].i === list[a].i) b++;
+    const per = Math.max(1, Math.floor(MAX_PART / D));
+    for (let c = a; c < b; c += per) {
+      const count = Math.min(per, b - c), secs = count > 1 ? count * D : Math.max(5, 2 * D);
+      parts.push({ from: c, count, secs, D: count > 1 ? D : secs, still: false });
+    }
+    a = b;
+  }
+  return { list, D, parts, total: parts.reduce((t, pt) => t + pt.secs, 0), mixed: true };
+}
+const hasShow = () => state.motion !== 'video' && entries().some(e => e.tpl === 'show');
+const needMake = () => state.motion === 'video' || hasShow();     // vor dem Teilen muss etwas gerechnet werden
+const curPlan = () => state.motion === 'video' ? videoPlan() : mixedPlan();
+// WhatsApp nimmt Bilder und Videos nicht gemischt aus einem Teilen-Vorgang an („Du kannst keine leere Nachricht
+// senden“). Deshalb wird in Schritten geteilt: aufeinanderfolgende Dateien derselben Art zusammen, in Reihenfolge.
+let shareStep = { rev: -1, k: 0 };
+function shareGroups(files) {
+  const out = [];
+  for (const f of files) {
+    const last = out[out.length - 1];
+    if (last && last[0].type.split('/')[0] === f.type.split('/')[0]) last.push(f); else out.push([f]);
+  }
+  return out;
+}
+function shareAt() {
+  const n = video ? shareGroups(video.files).length : 1;
+  return shareStep.rev === shotRev && shareStep.k < n ? shareStep.k : 0;
+}
+function videoInfo() {
+  const vid = state.motion === 'video', mix = hasShow(), n = state.photos.length;
+  $('vidopts').hidden = $('soundopts').hidden = !vid && !mix;
+  $('totalwrap').hidden = $('voicecard').hidden = !vid;
+  if (mix) {
+    const pl = mixedPlan(), clips = pl.parts.filter(pt => !pt.still), pics = pl.parts.length - clips.length;
+    $('slidesecwrap').hidden = false;
+    $('vidinfo').textContent = (pics ? `${pics} ${pics === 1 ? 'Bild' : 'Bilder'} und ` : '')
+      + `${clips.length} ${clips.length === 1 ? 'Diashow' : 'Diashows'} (${secText(clips.reduce((t, pt) => t + pt.secs, 0))}). Zuerst unten „Diashow erstellen“ antippen. `
+      + (pics ? 'WhatsApp nimmt Bilder und Videos nur getrennt an, deshalb teilst du danach Schritt für Schritt in der richtigen Reihenfolge.' : 'Danach teilen.');
+    return;
+  }
+  if (!vid) return;
+  const pl = videoPlan();
+  $('slidesecwrap').hidden = pl.fixed > 0 || pl.byVoice;
+  let t = !n ? 'Für das Video bitte zuerst Fotos wählen.'
+        : pl.slides > 1 ? `${pl.slides} Folien × ${secText(pl.D)} = ${secText(pl.total)}.` : `Ein kurzes Zoom-Video von ${secText(pl.total)}.`;
+  if (n && pl.byVoice) t += ' Die Länge richtet sich nach der Sprachaufnahme.';
+  if (n && pl.over) t += ` Achtung: ${pl.slides} Folien brauchen mindestens ${secText(pl.total)} – länger als die gewählten ${pl.fixed} s. Weniger Fotos wählen oder die Gesamtlänge erhöhen.`;
+  if (n && pl.parts.length > 1) t += ` Länger als ${MAX_PART} s: Es entstehen ${pl.parts.length} Videos, die du zusammen teilst.`;
+  if (sound.voice && pl.fixed && sound.voice.buf.duration + VOICE_AT > pl.total) t += ' Die Sprachaufnahme ist länger als das Video und wird am Ende abgeschnitten.';
+  $('vidinfo').textContent = t;
+}
+function shareLabel(vid) {
+  const groups = shareGroups(video.files);
+  if (groups.length < 2) return (video.files.length > 1 ? video.files.length + (vid ? ' Videos' : ' Beiträge') : 'Video') + ' teilen · WhatsApp-Status';
+  const g = groups[shareAt()], img = g[0].type.startsWith('image/');
+  const what = img ? (g.length > 1 ? g.length + ' Bilder' : 'Bild') : (g.length > 1 ? g.length + ' Videos' : vid ? 'Video' : 'Diashow');
+  return `Teilen ${shareAt() + 1} von ${groups.length}: ${what}`;
+}
+function syncButtons() {
+  videoInfo();
+  if (recording) return;
+  const vid = state.motion === 'video', mk = needMake(), ok = videoReady(), pics = slidesList().length;
+  $('share').disabled = false;
+  $('share').textContent = !mk ? (pics > 1 ? pics + ' Bilder teilen' : 'Teilen') + ' · WhatsApp-Status'
+    : !ok ? (vid ? 'Video erstellen' : 'Diashow erstellen')
+    : shareLabel(vid);
+  $('save').disabled = mk && !ok;
+}
+// Vollbild: mehrere Teile laufen nacheinander und beginnen dann von vorn
+let playPart = 0;
+function showVideo(i = 0) {
+  playPart = i % video.urls.length;
+  $('fullimg').hidden = true; $('fullvid').hidden = false;
+  $('fullvid').src = video.urls[playPart];
+  $('fullvid').muted = false; $('fullvid').currentTime = 0;
+  // direkt nach dem Erstellen gilt der Tipp nicht mehr als Geste: dann läuft das Video ohne Ton an
+  $('fullvid').play().catch(() => { $('fullvid').muted = true; $('fullvid').play().catch(() => {}); });
+  openLayer('full');
+}
+$('fullvid').addEventListener('ended', () => { if (layer === 'full' && videoReady()) showVideo(playPart + 1); });
+let muxerReady = null;
+function loadMuxer() {
+  if (!muxerReady) muxerReady = new Promise(res => {
+    const s = document.createElement('script');
+    s.src = 'vendor/mp4-muxer.min.js';
+    s.onload = () => res(window.Mp4Muxer || null); s.onerror = () => res(null);
+    document.head.appendChild(s);
+  });
+  return muxerReady;
+}
+// liefert { add(i), audio(buf, from, secs), finish() → Blob, cancel(), ext, sound }
+async function openSink(canvas, withAudio) {
+  const lib = 'VideoEncoder' in window ? await loadMuxer() : null;
+  let cfg = null;
+  if (lib) for (const codec of ['avc1.640028', 'avc1.4d0028', 'avc1.42e028', 'avc1.42001f']) {
+    const c = { codec, width: VID_W, height: VID_H, bitrate: 5e6, framerate: FPS };
+    try { if ((await VideoEncoder.isConfigSupported(c)).supported) { cfg = c; break; } } catch (e) {}
+  }
+  if (cfg) {
+    // Ton: AAC (das spielt WhatsApp sicher ab), sonst Opus
+    let acfg = null, akind = null;
+    if (withAudio && 'AudioEncoder' in window) for (const [codec, kind] of [['mp4a.40.2', 'aac'], ['opus', 'opus']]) {
+      const c = { codec, sampleRate: AUDIO_SR, numberOfChannels: 2, bitrate: 128000 };
+      try { if ((await AudioEncoder.isConfigSupported(c)).supported) { acfg = c; akind = kind; break; } } catch (e) {}
+    }
+    const muxer = new lib.Muxer({ target: new lib.ArrayBufferTarget(), fastStart: 'in-memory',
+                                  video: { codec: 'avc', width: VID_W, height: VID_H, frameRate: FPS },
+                                  ...(acfg ? { audio: { codec: akind, numberOfChannels: 2, sampleRate: AUDIO_SR } } : {}) });
+    let err = null;
+    const enc = new VideoEncoder({ output: (chunk, meta) => muxer.addVideoChunk(chunk, meta), error: e => { err = e; } });
+    enc.configure(cfg);
+    let aenc = null;
+    if (acfg) { aenc = new AudioEncoder({ output: (chunk, meta) => muxer.addAudioChunk(chunk, meta), error: e => { err = e; } }); aenc.configure(acfg); }
+    return {
+      ext: 'mp4', sound: akind,
+      async add(i) {
+        if (err) throw err;
+        const fr = new VideoFrame(canvas, { timestamp: Math.round(i * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+        enc.encode(fr, { keyFrame: i % 60 === 0 }); fr.close();
+        while (enc.encodeQueueSize > 3) await sleep(4);
+      },
+      // schreibt den Ausschnitt [from, from + secs) des fertig gemischten Tons
+      async audio(buf, from, secs) {
+        if (!aenc) return;
+        const sr = buf.sampleRate, a = Math.round(from * sr), b = Math.min(buf.length, Math.round((from + secs) * sr)), N = 4800;
+        const L = buf.getChannelData(0), R = buf.getChannelData(buf.numberOfChannels > 1 ? 1 : 0);
+        for (let i = a; i < b; i += N) {
+          if (err) throw err;
+          const n = Math.min(N, b - i), data = new Float32Array(n * 2);
+          data.set(L.subarray(i, i + n), 0); data.set(R.subarray(i, i + n), n);
+          const ad = new AudioData({ format: 'f32-planar', sampleRate: sr, numberOfFrames: n, numberOfChannels: 2,
+                                     timestamp: Math.round((i - a) * 1e6 / sr), data });
+          aenc.encode(ad); ad.close();
+          while (aenc.encodeQueueSize > 20) await sleep(4);
+        }
+      },
+      async finish() {
+        await enc.flush(); if (aenc) await aenc.flush();
+        if (err) throw err;
+        enc.close(); if (aenc) aenc.close(); muxer.finalize();
+        return new Blob([muxer.target.buffer], { type: 'video/mp4' });
+      },
+      cancel() { try { enc.close(); } catch (e) {} try { if (aenc) aenc.close(); } catch (e) {} },
+    };
+  }
+  if (!window.MediaRecorder || !canvas.captureStream) throw new Error('Dieser Browser kann kein Video erzeugen.');
+  const type = ['video/mp4;codecs=avc1.640028', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm'].find(t => MediaRecorder.isTypeSupported(t));
+  if (!type) throw new Error('Dieser Browser kann kein Video erzeugen.');
+  const stream = canvas.captureStream(0), track = stream.getVideoTracks()[0], chunks = [];
+  const rec = new MediaRecorder(stream, { mimeType: type, videoBitsPerSecond: 5e6 });
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  const stopped = new Promise(r => { rec.onstop = r; });
+  rec.start();
+  const t0 = performance.now();
+  return {
+    ext: type.startsWith('video/mp4') ? 'mp4' : 'webm', sound: null,
+    async add(i) { track.requestFrame(); await sleep(Math.max(0, t0 + (i + 1) * 1000 / FPS - performance.now())); },
+    async audio() {},
+    async finish() { rec.stop(); await stopped; track.stop(); return new Blob(chunks, { type: type.split(';')[0] }); },
+    cancel() { try { rec.stop(); track.stop(); } catch (e) {} },
+  };
+}
+// zeichnet das Bild der Diashow zum Zeitpunkt t (Sekunden seit Beginn des Teils) auf die Vorschaufläche;
+// Video-Erzeugung und Sofort-Vorschau nutzen dasselbe
+let backCv = null, backCtx = null;
+function showFrame(plan, part, t) {
+  if (!backCv) { backCv = document.createElement('canvas'); backCv.width = W; backCv.height = H; backCtx = backCv.getContext('2d'); }
+  if (part.still) { drawSlide(plan.list[part.from]); return; }
+  const D = part.D || plan.D, slides = part.count, total = part.secs;
+  const clamp = v => Math.max(0, Math.min(1, v));
+  const slide = (target, j, zoom) => drawSlide(plan.list[j], zoom, target);
+  // jede Folie zoomt über ihre ganze Standzeit einschließlich der Überblendung davor
+  const zoom = (t, j) => slides > 1 ? 1 + 0.07 * clamp((t - j * D + FADE) / (D + FADE)) : 1 + 0.08 * t / total;
+  const k = Math.min(slides - 1, Math.floor(t / D)), into = t - k * D;
+  slide(mainCtx, part.from + k, zoom(t, k));
+  if (k < slides - 1 && into > D - FADE) {
+    const a = (into - (D - FADE)) / FADE;
+    slide(backCtx, part.from + k + 1, zoom(t, k + 1));
+    mainCtx.globalAlpha = a * a * (3 - 2 * a); mainCtx.drawImage(backCv, 0, 0); mainCtx.globalAlpha = 1;
+  }
+}
+
+// --- Sofort-Vorschau der Diashow: läuft direkt in der App, ohne dass ein Video erzeugt wird ---
+// Tempo 1× mit Ton, 2× und 4× als Zeitraffer ohne Ton. Bei mehreren Teilen zeigt die Zeile, welches Video läuft.
+let live = null;   // { plan, t, speed, last, raf, mix, src }
+const fullCtx = $('fullcv').getContext('2d');
+function liveSound() {
+  if (!live) return;
+  if (live.src) { try { live.src.stop(); } catch (e) {} live.src = null; }
+  if (live.speed !== 1 || !live.mix) return;
+  const ac = getAudioCtx(), src = ac.createBufferSource();
+  ac.resume().catch(() => {});
+  src.buffer = live.mix; src.connect(ac.destination); src.start(0, Math.min(live.t, live.mix.duration - 0.01)); live.src = src;
+}
+function liveTick(now) {
+  if (!live) return;
+  const dt = Math.max(0, Math.min(0.25, (now - live.last) / 1000)); live.last = now;   // der erste Zeitstempel kann vor dem Start liegen
+  live.t += dt * live.speed;
+  if (live.t >= live.plan.total) { live.t = 0; liveSound(); }
+  let from = 0, pi = 0;
+  while (pi < live.plan.parts.length - 1 && live.t >= from + live.plan.parts[pi].secs) from += live.plan.parts[pi++].secs;
+  showFrame(live.plan, live.plan.parts[pi], live.t - from);
+  fullCtx.drawImage(cv, 0, 0, $('fullcv').width, $('fullcv').height);
+  const np = live.plan.parts.length;
+  $('fulltime').textContent = `${clock(live.t)} / ${clock(live.plan.total)}` + (np > 1 ? ` · ${live.plan.mixed ? 'Beitrag' : 'Video'} ${pi + 1} von ${np}` : '');
+  live.raf = requestAnimationFrame(liveTick);
+}
+async function startLive(plan) {
+  stopSound(); stopLive();
+  live = { plan, t: 0, speed: 1, last: performance.now(), raf: 0, mix: null, src: null };
+  $('fullimg').hidden = $('fullvid').hidden = true; $('fullcv').hidden = $('fullbar').hidden = false;
+  [...$('fullspeed').children].forEach(b => b.classList.toggle('on', b.dataset.v === '1'));
+  openLayer('full');
+  live.raf = requestAnimationFrame(liveTick);
+  const mine = live;
+  if (plan.mixed) return;                            // Ton gibt es in der Vorschau nur für „Alles als ein Video“
+  try { const mix = await mixSound(plan.total); if (live === mine) { live.mix = mix; liveSound(); } } catch (e) {}
+}
+function stopLive() {
+  if (!live) return;
+  cancelAnimationFrame(live.raf);
+  if (live.src) { try { live.src.stop(); } catch (e) {} }
+  live = null;
+  $('fullcv').hidden = $('fullbar').hidden = true;
+  drawStill();
+}
+$('fullbar').onclick = e => {
+  e.stopPropagation();                               // Antippen der Leiste schließt das Vollbild nicht
+  const b = e.target.closest('button'); if (!b || !live) return;
+  live.speed = +b.dataset.v;
+  [...$('fullspeed').children].forEach(c => c.classList.toggle('on', c === b));
+  liveSound();
+};
+$('liveplay').onclick = () => {
+  if (state.motion === 'video' && !state.photos.length) { toast('Für das Video bitte zuerst Fotos wählen.'); return; }
+  openPreview(false);
+};
+
+async function makeVideo() {
+  const vid = state.motion === 'video';
+  if (vid && !state.photos.length) { toast('Für ein Video bitte zuerst Fotos wählen.'); return; }
+  if (recording) return;
+  stopSound();
+  const rev = shotRev, plan = curPlan(), np = plan.parts.length;
+  const allFrames = Math.max(1, Math.round(plan.parts.reduce((t, pt) => t + (pt.still ? 0 : pt.secs), 0) * FPS));
+  const small = document.createElement('canvas'); small.width = VID_W; small.height = VID_H;
+  const sctx = small.getContext('2d'); sctx.imageSmoothingQuality = 'high';
+  const stale = () => { if (shotRev === rev) return false; toast('Abgebrochen, weil etwas geändert wurde.'); return true; };
+
+  recording = true; dropVideo();
+  $('share').disabled = true; $('save').disabled = true;
+  let sink = null;
+  try {
+    $('share').textContent = 'Wird vorbereitet …';
+    const whole = vid ? await mixSound(plan.total) : null;   // ein Video: Ton über die ganze Länge
+    const files = [];
+    let from = 0, doneFrames = 0, kind = null, type = 'video/mp4', hadMix = false, clips = 0;
+    for (const [pi, part] of plan.parts.entries()) {
+      const suffix = np > 1 ? `_${pi + 1}von${np}` : '';
+      if (part.still) {
+        const blob = await stillBlob(plan.list[part.from]);
+        if (stale()) return;
+        files.push(new File([blob], fileName('jpg', suffix), { type: 'image/jpeg' }));
+        continue;
+      }
+      const total = part.secs, frames = Math.round(total * FPS);
+      const mix = vid ? whole : await mixSound(total, true);   // gemischt: jede Diashow bekommt die Musik von vorn, ohne Sprache
+      if (mix) hadMix = true;
+      sink = await openSink(small, !!mix); kind = sink.sound;
+      for (let f = 0; f < frames; f++) {
+        if (stale()) { sink.cancel(); sink = null; return; }
+        showFrame(plan, part, f / FPS);
+        sctx.drawImage(cv, 0, 0, VID_W, VID_H);
+        await sink.add(f);
+        if (f % 3 === 0) { $('share').textContent = `Video wird erstellt … ${Math.round((doneFrames + f) / allFrames * 100)} %`; await sleep(0); }
+      }
+      if (mix) await sink.audio(mix, vid ? from : 0, total);
+      const blob = await sink.finish(); sink = null;
+      if (stale()) return;
+      type = blob.type; clips++;
+      files.push(new File([blob], fileName(type === 'video/mp4' ? 'mp4' : 'webm', suffix), { type }));
+      from += total; doneFrames += frames;
+    }
+    video = { rev, files, urls: files.map(f => URL.createObjectURL(f)), secs: plan.total, mixed: !vid };
+    const mb = (files.reduce((a, f) => a + f.size, 0) / 1048576).toFixed(1).replace('.', ',');
+    const what = !vid ? `${files.length} ${files.length > 1 ? 'Beiträge' : 'Beitrag'} fertig (${mb} MB)`
+      : files.length > 1 ? `${files.length} Videos fertig (zusammen ${secText(plan.total)}, ${mb} MB)` : `Video fertig (${secText(plan.total)}, ${mb} MB)`;
+    toast(type !== 'video/mp4' ? `${what}, aber das Video nur als WebM – WhatsApp nimmt das eventuell nicht an.`
+        : hadMix && !kind ? `${what}, aber ohne Ton: Dieser Browser kann keinen Ton ins Video schreiben.`
+        : hadMix && kind !== 'aac' ? `${what}. Der Ton ist als Opus gespeichert – bitte in WhatsApp prüfen, ob er zu hören ist.`
+        : `${what}. Jetzt unten teilen${shareGroups(files).length > 1 ? ' – Schritt für Schritt' : ''}.`, 7000);
+    if (vid) showVideo();
+  } catch (e) {
+    if (sink) sink.cancel();
+    toast('Video konnte nicht erstellt werden: ' + (e && e.message || e), 6000);
+  } finally {
+    recording = false;
+    drawStill(); syncButtons();
+  }
+}
+function dropVideo() {
+  if (video) video.urls.forEach(u => URL.revokeObjectURL(u));
+  video = null;
+}
+
+// --- Ton im Video: Musik und eigene Sprachaufnahme ---
+let audioCtx = null;
+const getAudioCtx = () => audioCtx || (audioCtx = new (window.AudioContext || window.webkitAudioContext)());
+// mischt Musik und Sprache auf die Länge des Videos; während gesprochen wird, ist die Musik leiser
+async function mixSound(total, noVoice = false) {
+  const music = sound.music, voice = noVoice ? null : sound.voice;
+  if ((!music && !voice) || !window.OfflineAudioContext) return null;
+  const oc = new OfflineAudioContext(2, Math.ceil(total * AUDIO_SR), AUDIO_SR);
+  const v0 = VOICE_AT, v1 = voice ? v0 + voice.buf.duration : 0;
+  if (music) {
+    const src = oc.createBufferSource(), fade = oc.createGain(), duck = oc.createGain();
+    src.buffer = music.buf; src.loop = true;
+    const vol = { low: 0.3, mid: 0.6, high: 0.95 }[state.musicVol], out = Math.min(1.5, total / 3);
+    fade.gain.setValueAtTime(0, 0); fade.gain.linearRampToValueAtTime(1, Math.min(0.6, total / 4));
+    fade.gain.setValueAtTime(1, total - out); fade.gain.linearRampToValueAtTime(0, total);
+    duck.gain.setValueAtTime(vol, 0);
+    if (voice) {
+      const low = Math.min(vol, 0.16);
+      duck.gain.setValueAtTime(vol, 0.05); duck.gain.linearRampToValueAtTime(low, v0);
+      if (v1 + 0.8 < total) { duck.gain.setValueAtTime(low, v1); duck.gain.linearRampToValueAtTime(vol, v1 + 0.8); }
+    }
+    src.connect(duck).connect(fade).connect(oc.destination);
+    src.start(0, Math.min(music.start, Math.max(0, music.buf.duration - 1)));
+  }
+  if (voice) { const src = oc.createBufferSource(); src.buffer = voice.buf; src.connect(oc.destination); src.start(v0); }
+  return oc.startRendering();
+}
+function soundUI() {
+  const { music, voice } = sound;
+  $('musicbox').hidden = !music; $('musicdel').disabled = !music;
+  $('musicpick').textContent = music ? 'Andere Musikdatei' : 'Musikdatei wählen';
+  if (music) {
+    $('musicname').textContent = `${music.name} · ${clock(music.buf.duration)} min`;
+    $('musicstart').max = Math.max(0, Math.floor(music.buf.duration - 5)); $('musicstart').value = music.start;
+    $('musicat').textContent = clock(music.start);
+  }
+  $('voicedel').disabled = !voice;
+  if (!voiceRec) {
+    $('voicerec').textContent = voice ? 'Neu aufnehmen' : 'Aufnehmen';
+    $('voiceinfo').textContent = voice ? `Aufnahme: ${secText(voice.buf.duration)}. Ohne feste Gesamtlänge wird das Video so lang wie die Aufnahme.`
+                                       : 'Sprich deinen Text am Stück ein. Die Musik wird währenddessen leiser.';
+  }
+  $('soundplay').hidden = !music && !voice;
+}
+function soundChanged() { stopSound(); soundUI(); render(); }   // render() verwirft auch ein fertiges Video
+$('musicpick').onclick = () => $('musicfile').click();
+$('musicfile').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = '';
+  if (!f) return;
+  $('musicpick').textContent = 'Lade …';
+  try {
+    const buf = await getAudioCtx().decodeAudioData(await f.arrayBuffer());
+    sound.music = { buf, name: f.name.replace(/\.[^.]+$/, ''), start: 0 };
+  } catch (err) { toast('Diese Datei kann nicht als Musik gelesen werden.'); }
+  soundChanged();
+};
+$('musicdel').onclick = () => { sound.music = null; soundChanged(); };
+$('musicstart').addEventListener('input', () => { if (sound.music) { sound.music.start = +$('musicstart').value; $('musicat').textContent = clock(sound.music.start); } });
+$('musicstart').addEventListener('change', soundChanged);
+$('musicvol').addEventListener('click', stopSound);
+
+// Sprachaufnahme über das Mikrofon
+let voiceRec = null;
+$('voicerec').onclick = async () => {
+  if (voiceRec) { voiceRec.stop(); return; }
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Dieser Browser kann nicht aufnehmen.'); return; }
+  stopSound();
+  let stream;
+  try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } }); }
+  catch (e) { toast('Mikrofon nicht erlaubt. Bitte in den Einstellungen der App freigeben.', 5000); return; }
+  const chunks = [], rec = new MediaRecorder(stream), t0 = performance.now();
+  const tick = setInterval(() => {
+    const t = (performance.now() - t0) / 1000;
+    $('voicerec').textContent = `Stopp (${clock(t)})`;
+    if (t >= 180) rec.stop();                      // spätestens nach drei Minuten ist Schluss
+  }, 250);
+  rec.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+  rec.onstop = async () => {
+    clearInterval(tick); stream.getTracks().forEach(t => t.stop()); voiceRec = null;
+    $('voicerec').classList.remove('on');
+    try {
+      const buf = await getAudioCtx().decodeAudioData(await new Blob(chunks, { type: rec.mimeType }).arrayBuffer());
+      if (buf.duration < 0.5) toast('Die Aufnahme war zu kurz.'); else sound.voice = { buf };
+    } catch (e) { toast('Die Aufnahme konnte nicht gelesen werden.'); }
+    soundChanged();
+  };
+  voiceRec = rec; rec.start();
+  $('voicerec').classList.add('on'); $('voicerec').textContent = 'Stopp (0:00)';
+  $('voiceinfo').textContent = 'Aufnahme läuft … Zum Beenden „Stopp“ antippen.';
+};
+$('voicedel').onclick = () => { sound.voice = null; soundChanged(); };
+
+// „Ton anhören“: spielt den gemischten Ton so, wie er im Video liegt
+let playing = null;
+function stopSound() {
+  if (playing) { try { playing.stop(); } catch (e) {} playing = null; }
+  $('soundplay').textContent = 'Ton anhören';
+}
+$('soundplay').onclick = async () => {
+  if (playing) { stopSound(); return; }
+  const ac = getAudioCtx();
+  try { await ac.resume(); } catch (e) {}
+  const buf = await mixSound(videoPlan().total); if (!buf) return;
+  const src = ac.createBufferSource(); src.buffer = buf; src.connect(ac.destination);
+  src.onended = () => { if (playing === src) stopSound(); };
+  playing = src; src.start(); $('soundplay').textContent = 'Stopp';
+};
+soundUI();
+
+// --- Diktieren (Spracherkennung des Browsers) ---
+function setField(id, value, keepUndo) { if (!keepUndo) dropUndo(); $(id).value = value; $(id).dispatchEvent(new Event('input')); }
+
+// --- Texte leeren (mit „Rückgängig“, bis wieder etwas eingegeben wird) ---
+const FIELDS = ['title', 'text', 'footer'];
+let undo = null;
+function dropUndo() { undo = null; $('clrall').textContent = 'Alle Texte leeren'; }
+function clearFields(ids) {
+  if (!ids.some(id => $(id).value)) { toast('Da steht nichts mehr.'); return; }
+  const before = {}; FIELDS.forEach(id => { before[id] = $(id).value; });
+  ids.forEach(id => setField(id, '', true));
+  undo = before; $('clrall').textContent = 'Rückgängig';
+}
+$('clrall').onclick = () => {
+  if (!undo) { clearFields(FIELDS); return; }
+  const u = undo; FIELDS.forEach(id => setField(id, u[id], true)); dropUndo();
+};
+document.querySelectorAll('[data-clr]').forEach(b => { b.onclick = () => clearFields([b.dataset.clr]); });
+FIELDS.forEach(id => $(id).addEventListener('input', e => { if (e.isTrusted) dropUndo(); }));
+(() => {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;                                   // ohne Unterstützung bleiben die Knöpfe ausgeblendet
+  let rec = null, btn = null;
+  const stop = () => { if (rec) { try { rec.stop(); } catch (e) {} } };
+  document.querySelectorAll('.mic[data-for]').forEach(b => {
+    b.hidden = false;
+    b.onclick = () => {
+      if (rec) { const same = btn === b; stop(); if (same) return; }
+      const id = b.dataset.for, base = id === 'title' ? '' : $(id).value.replace(/\s+$/, '');   // Titel ersetzen, Text anhängen
+      const r = new SR(); r.lang = 'de-DE'; r.interimResults = true; r.continuous = false;
+      r.onresult = e => {
+        let t = ''; for (const res of e.results) t += res[0].transcript;
+        t = t.trim(); if (!t) return;
+        if (!base) t = t[0].toUpperCase() + t.slice(1);
+        setField(id, base ? base + ' ' + t : t);
+      };
+      r.onerror = e => {
+        if (e.error === 'not-allowed' || e.error === 'service-not-allowed') toast('Mikrofon nicht erlaubt. Bitte in den Einstellungen der App freigeben.', 5000);
+        else if (e.error === 'no-speech') toast('Nichts gehört.');
+        else if (e.error === 'network') toast('Diktieren braucht eine Internetverbindung.');
+        else if (e.error !== 'aborted') toast('Diktieren hat nicht geklappt (' + e.error + ').');
+      };
+      r.onend = () => { if (rec === r) { rec = null; btn = null; } b.classList.remove('on'); b.lastElementChild.textContent = 'Diktieren'; };
+      try { r.start(); } catch (e) { toast('Diktieren hat nicht geklappt.'); return; }
+      rec = r; btn = b; b.classList.add('on'); b.lastElementChild.textContent = 'Ich höre … (Stopp)';
+    };
+  });
+})();
+
+// --- Infos zum Ort (Wikipedia) ---
+const WIKI = 'https://de.wikipedia.org/w/api.php?format=json&origin=*&action=query'
+           + '&prop=coordinates%7Cdescription%7Cextracts&exintro=1&explaintext=1&exsentences=3&exlimit=10&colimit=10';
+const meters = (a, b) => {
+  const r = Math.PI / 180, x = (b.lon - a.lon) * r * Math.cos((a.lat + b.lat) / 2 * r), y = (b.lat - a.lat) * r;
+  return Math.sqrt(x * x + y * y) * 6371000;
+};
+const distText = m => m < 950 ? Math.round(m / 10) * 10 + ' m' : (m / 1000).toFixed(1).replace('.', ',') + ' km';
+// kürzt auf ganze Sätze, damit der Text ins Bild passt
+function shortText(t, max = 300) {
+  t = String(t || '').replace(/\s+/g, ' ').trim();
+  if (t.length <= max) return t;
+  const cut = t.slice(0, max), end = Math.max(cut.lastIndexOf('. '), cut.lastIndexOf('! '), cut.lastIndexOf('? '));
+  return end > 80 ? cut.slice(0, end + 1) : cut.replace(/\s+\S*$/, '') + ' …';
+}
+async function wikiQuery(params, here) {
+  const res = await fetch(WIKI + params);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const pages = Object.values(((await res.json()).query || {}).pages || {});
+  const list = pages.map(p => {
+    const c = p.coordinates && p.coordinates[0];
+    return { title: p.title, desc: p.description || '', text: shortText(p.extract), index: p.index || 0,
+             dist: here && c ? meters(here, { lat: c.lat, lon: c.lon }) : null };
+  }).filter(p => p.text);
+  return list.sort((a, b) => here ? (a.dist ?? 1e9) - (b.dist ?? 1e9) : a.index - b.index);
+}
+function showPlaces(list, note) {
+  const box = $('places'); box.innerHTML = '';
+  if (note) { const n = document.createElement('div'); n.className = 'hint'; n.style.marginTop = '8px'; n.textContent = note; box.appendChild(n); }
+  list.forEach(p => {
+    const d = document.createElement('div'); d.className = 'place';
+    const h = document.createElement('h3'); h.textContent = p.title;
+    const m = document.createElement('div'); m.className = 'meta';
+    m.textContent = [p.desc, p.dist != null ? distText(p.dist) + ' entfernt' : ''].filter(Boolean).join(' · ');
+    const t = document.createElement('p'); t.textContent = p.text;
+    const row = document.createElement('div'); row.className = 'row';
+    const use = document.createElement('button'); use.className = 'btn'; use.textContent = 'Titel + Text übernehmen';
+    use.onclick = () => { setField('title', p.title); setField('text', p.text); toast('Übernommen. Quelle: Wikipedia.'); };
+    const add = document.createElement('button'); add.className = 'btn'; add.textContent = 'Text anhängen';
+    add.onclick = () => { const cur = $('text').value.replace(/\s+$/, ''); setField('text', cur ? cur + '\n' + p.text : p.text); toast('Angehängt. Quelle: Wikipedia.'); };
+    row.append(use, add); d.append(h, m, t, row); box.appendChild(d);
+  });
+}
+async function placesNear(here, label) {
+  showPlaces([], 'Suche Einträge in der Nähe …');
+  try {
+    const q = r => wikiQuery(`&generator=geosearch&ggscoord=${here.lat.toFixed(5)}%7C${here.lon.toFixed(5)}&ggsradius=${r}&ggslimit=10`, here);
+    let list = await q(1500);
+    if (list.length < 3) list = await q(10000);
+    showPlaces(list, list.length ? label : 'Kein Wikipedia-Eintrag im Umkreis von 10 km gefunden.');
+  } catch (e) { showPlaces([], 'Wikipedia ist gerade nicht erreichbar (Internetverbindung?).'); }
+}
+$('geoPhoto').onclick = () => {
+  const p = state.photos.find(x => x.gps);
+  if (p) placesNear(p.gps, 'In der Nähe des Aufnahmeorts:');
+  else showPlaces([], state.photos.length
+    ? 'Im Foto ist kein Aufnahmeort gespeichert. Android entfernt ihn beim Auswählen oft – dann hilft „Mein Standort“ oder die Suche nach dem Namen.'
+    : 'Bitte zuerst ein Foto wählen.');
+};
+$('geoHere').onclick = () => {
+  if (!navigator.geolocation) { showPlaces([], 'Dieser Browser kann den Standort nicht bestimmen.'); return; }
+  showPlaces([], 'Bestimme den Standort …');
+  navigator.geolocation.getCurrentPosition(
+    pos => placesNear({ lat: pos.coords.latitude, lon: pos.coords.longitude }, 'In deiner Nähe:'),
+    err => showPlaces([], err.code === 1 ? 'Standort nicht erlaubt. Bitte in den Einstellungen der App freigeben oder nach dem Namen suchen.'
+                                         : 'Standort konnte nicht bestimmt werden.'),
+    { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+};
+async function placeSearch() {
+  const q = $('placeq').value.trim(); if (!q) return;
+  $('placeq').blur(); showPlaces([], 'Suche …');
+  try {
+    const list = await wikiQuery('&generator=search&gsrlimit=8&gsrsearch=' + encodeURIComponent(q), null);
+    showPlaces(list, list.length ? '' : 'Nichts gefunden.');
+  } catch (e) { showPlaces([], 'Wikipedia ist gerade nicht erreichbar (Internetverbindung?).'); }
+}
+$('placego').onclick = placeSearch;
+$('placeq').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); placeSearch(); } });
+
+// --- Version ---
+// Der Platzhalter wird beim Veröffentlichen (app-veroeffentlichen.cmd) durch Datum, Uhrzeit und Commit ersetzt.
+const APP_VERSION = '14.11. 18:05 (dc4973e)';
+$('ver').textContent = APP_VERSION.startsWith('@@') ? 'lokale Testfassung' : APP_VERSION;   // steht auf der Seite „Über Imagiclique“
+
+// --- Startanimation „Zauberstab“ ---
+// Das I wird zum Zauberstab, kreist über „magic“, tippt auf das g; die Farbe wandert zu „clique“.
+// Zeichencode unverändert aus imagichron-webseite/zauberstab.js (Quelle: imagicosmos/docs/entwuerfe/
+// schriftzug-animation.html), hier mit den Farben für dunklen Grund. Spielt beim Start und beim
+// Antippen des Schriftzugs oben; Antippen überspringt. Bei „Bewegung reduzieren“ steht nur das Endbild.
+(() => {
+  const WORTE = { imagiclique: { text: "Imagiclique", farben: ["#4ade80", "#86efac"], stern: "#22c55e", band: "#86efac", teil: [5, 10] } };
+  let TINTE = "#fdf8ef";
+    const GROESSE = 150, GRUND = 236, RAND = 40;
+  const klemm = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x));
+  const weich = x => { x = klemm(x); return x * x * (3 - 2 * x); };
+  const ausrollen = x => { x = klemm(x); return 1 - Math.pow(1 - x, 3); };
+  const misch = (a, b, t) => a + (b - a) * t;
+  const hex = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+  const farbe = (a, b, t) => { const x = hex(a), y = hex(b); return `rgb(${x.map((v, i) => Math.round(misch(v, y[i], t))).join(",")})`; };
+  const phase = (t, von, bis) => klemm((t - von) / (bis - von));
+
+  function zeichne(ctx, wort, t) {
+    const w = WORTE[wort], text = w.text, letzter = text.length - 1, [c, ende] = w.teil;
+    ctx.font = `700 ${GROESSE}px "Josefin Sans"`; ctx.textBaseline = "alphabetic";
+    const x0 = RAND;
+    const xs = [...text].map((_, i) => x0 + ctx.measureText(text.slice(0, i)).width);
+    const bs = [...text].map((_, i) => ctx.measureText(text.slice(0, i + 1)).width - ctx.measureText(text.slice(0, i)).width);
+    const kappe = GRUND - GROESSE * .72, mitte = i => xs[i] + bs[i] / 2;
+
+    /* Ablauf (Sekunden) */
+    const tStab = phase(t, .35, .95), tHoch = phase(t, .95, 1.35), tTipp = phase(t, 1.35, 1.6), TIPP = 2.65;
+    const tWandern = phase(t, 3.4, 4.6), tZurueck = phase(t, 4.65, 5.35), tI = phase(t, 5.3, 5.7), tReset = phase(t, 7.6, 8.1);
+
+    /* Farbanteil je Buchstabe */
+    const anteil = [], huepf = [];
+    const ziel = mitte(3), gOben = GRUND - GROESSE * .5 - 3, front1 = misch(.5, c, weich(tWandern)), front2 = misch(c + .5, ende + 1, weich(tWandern));
+    for (let i = 0; i <= letzter; i++) {
+      let a = 0, h = 0;
+      if (i >= 1 && i <= c) {
+        const p = phase(t, TIPP + Math.abs(i - 3) * .07, TIPP + Math.abs(i - 3) * .07 + .3);
+        a = weich(p); h = Math.sin(Math.PI * p) * (p > 0 && p < 1 ? 1 : 0);
+        if (i < c) a *= 1 - weich(front1 - i);
+      } else if (i > c) {
+        const q = klemm(front2 - i); a = weich(q); h = Math.sin(Math.PI * q) * .7;
+      }
+      anteil.push(a * (1 - weich(tReset))); huepf.push(h);
+    }
+
+    /* Buchstaben: kein Hüpfen, beim Verzaubern nur ein weiches Leuchten */
+    for (let i = 0; i <= letzter; i++) {
+      let alpha = 1;
+      if (i === 0) {
+        alpha = 1 - (weich(tStab) * (1 - weich(tI)));
+        /* Das I bleibt als Umriss (Rahmen) stehen, solange es Zauberstab ist */
+        if (alpha < 1) {
+          ctx.save(); ctx.globalAlpha = (1 - alpha) * .8; ctx.strokeStyle = TINTE; ctx.lineWidth = 3; ctx.lineJoin = "round";
+          ctx.textAlign = "center"; ctx.strokeText(text[0], mitte(0), GRUND); ctx.restore();
+        }
+      }
+      if (alpha <= 0) continue;
+      ctx.save(); ctx.globalAlpha = alpha;
+      const marke = farbe(w.farben[0], w.farben[1], klemm((i - 1) / (letzter - 1)));
+      ctx.fillStyle = anteil[i] > 0 ? farbe(TINTE, "#" + marke.match(/\d+/g).map(v => (+v).toString(16).padStart(2, "0")).join(""), anteil[i]) : TINTE;
+      if (huepf[i] > 0) { ctx.shadowColor = w.band; ctx.shadowBlur = 26 * huepf[i]; }
+      ctx.textAlign = "center"; ctx.fillText(text[i], mitte(i), GRUND);
+      ctx.restore();
+    }
+
+    /* Leuchtpunkt (weicher Lichtfleck statt Comic-Stern) */
+    const licht = (x, y, r, farbe1, staerke) => {
+      if (r <= 0 || staerke <= 0) return;
+      const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+      g.addColorStop(0, `rgba(255,255,255,${staerke})`);
+      g.addColorStop(.25, farbe1 + Math.round(staerke * 200).toString(16).padStart(2, "0"));
+      g.addColorStop(1, farbe1 + "00");
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    };
+
+    /* Zauberstab-Haltung zu jeder Zeit: Griff (x, y), Winkel w (0 = senkrecht nach oben), Länge L */
+    const L0 = GROESSE * .72, L1 = 150, sanft = x => { x = klemm(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+    const zw = (a, b, p) => ({ x: misch(a.x, b.x, p), y: misch(a.y, b.y, p), w: misch(a.w, b.w, p), L: misch(a.L, b.L, p) });
+    const ausSpitze = (px, py, w, L) => ({ x: px - Math.sin(w) * L, y: py + Math.cos(w) * L, w, L });
+    /* Gehaltener Stab: Der Griff bleibt ruhig in der Hand, nur die Spitze kreist (Drehen aus dem Handgelenk).
+       Kreis im Raum → in der Ansicht schwingt der Winkel, und der Stab wirkt vorn/hinten etwas kürzer (Verkürzung). */
+    const GRIFF = ausSpitze(ziel, gOben, 2.1, L1), K0 = 1.1, K1 = 2.4, WK = 1.8;
+    /* Eine durchgehende Bewegung: Kreisen beginnt schon beim Anheben, gleichmäßiges Tempo, aus dem Kreis heraus aufs g tippen */
+    const T0 = .38, KB = .75, OMEGA = 2.5 * Math.PI / (K1 - KB);          // Winkel läuft gleichmäßig; bei K1 bewegt sich die Spitze gerade abwärts
+    const kreisHaltung = t => {
+      const a = OMEGA * (t - KB);
+      const amp = weich(phase(t, KB, KB + .55)) * (1 - sanft(phase(t, K1, TIPP)));
+      const tw = phase(t, K1, TIPP), basisW = misch(WK, 2.1, tw * tw);                // zum g hin schneller werden
+      return { x: GRIFF.x - 7 * amp * Math.sin(a), y: GRIFF.y - 5 * amp * (Math.cos(a) - 1),
+               w: basisW + .27 * amp * Math.sin(a), L: L1 * (1 - .1 * amp + .1 * amp * Math.cos(a)) };
+    };
+    const ruhe = { x: mitte(0), y: GRUND, w: 0, L: L0 };
+    const tippH = { ...GRIFF, w: 2.1 };
+    /* Weg zwischen „I“ und Kreis in hohem Bogen (Griff steigt, Stab kippt früh – nicht über das m) */
+    const bogen = (a, b, p) => ({ x: misch(a.x, b.x, p), y: misch(a.y, b.y, p) - 60 * Math.sin(Math.PI * p),
+                                   w: misch(a.w, b.w, sanft(klemm(p / .6))), L: misch(a.L, b.L, p) });
+    const haltung = t => {
+      if (t < TIPP) {
+        const ziel = kreisHaltung(t), p = weich(phase(t, T0, 1.65));
+        return p < 1 ? bogen(ruhe, ziel, p) : ziel;
+      }
+      if (t < 4.65) { const g = { ...tippH }, n = t - TIPP; if (n < .5) g.w -= Math.sin(n / .5 * Math.PI) * .05; return g; }
+      return bogen(ruhe, tippH, 1 - sanft(tZurueck));
+    };
+    const spitzeVon = g => ({ x: g.x + Math.sin(g.w) * (g.L + 2), y: g.y - Math.cos(g.w) * (g.L + 2) });
+
+    /* Lichtspur der kreisenden Spitze */
+    if (t > K0 && t < TIPP + .3) {
+      for (let k = 1; k <= 18; k++) {
+        const tk = t - k * .022; if (tk < KB + .3 || tk > TIPP) continue;
+        const sp = spitzeVon(haltung(tk));
+        licht(sp.x, sp.y, 9 - k * .35, w.band, (1 - k / 18) * .55);
+      }
+    }
+
+    /* Zauberstab zeichnen: gerader dunkler Stab mit farbiger Spitze (wie Fassung 1), Leuchten an der Spitze */
+    const stabSichtbar = weich(tStab) * (1 - weich(tI));
+    if (stabSichtbar > 0) {
+      const g = haltung(t), stab = 17;
+      ctx.save(); ctx.globalAlpha = stabSichtbar; ctx.translate(g.x, g.y); ctx.rotate(g.w);
+      ctx.fillStyle = TINTE; ctx.beginPath(); ctx.roundRect(-stab / 2, -g.L, stab, g.L, 4); ctx.fill();
+      const bandL = g.L * .2 * weich(tStab);
+      ctx.fillStyle = w.band; ctx.beginPath(); ctx.roundRect(-stab / 2 + 2, -g.L + 2, stab - 4, bandL, 3); ctx.fill();
+      ctx.restore();
+      const sp = spitzeVon(g);
+      const glimmen = weich(phase(t, .8, 1.2)) * (1 - weich(tZurueck)) * stabSichtbar;
+      const blitz = Math.max(0, 1 - Math.abs(t - TIPP) / .25);
+      licht(sp.x, sp.y, 15 + 24 * blitz + 2 * Math.sin(t * 6), w.band, Math.min(1, glimmen * (.6 + .4 * blitz)));
+    }
+
+    /* Beim Tippen: ein Lichtring breitet sich aus, feiner Staub schwebt nach oben */
+    const nach = t - TIPP;
+    if (nach > 0 && nach < .7) {
+      const p = nach / .7;
+      ctx.save(); ctx.globalAlpha = (1 - p) * .55; ctx.strokeStyle = w.band; ctx.lineWidth = 3 * (1 - p) + .5;
+      ctx.beginPath(); ctx.ellipse(ziel, gOben, 20 + 120 * ausrollen(p), (20 + 120 * ausrollen(p)) * .45, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+    const staub = (x0, y0, t0, anzahl, dauer, streu) => {
+      for (let k = 0; k < anzahl; k++) {
+        const p = (t - t0 - k * .04) / dauer;
+        if (p <= 0 || p >= 1) continue;
+        const x = x0 + Math.sin(k * 2.39) * streu * ausrollen(p) + Math.sin(p * 6 + k) * 4, y = y0 - 70 * ausrollen(p) * (.6 + (k % 5) / 8);
+        licht(x, y, 5 + (k % 3) * 2, k % 2 ? w.band : w.stern, (1 - p) * .9);
+      }
+    };
+    staub(ziel, gOben, TIPP, 16, 1.1, 70);
+    /* Schimmer, der mit der Farbe nach rechts zieht */
+    if (tWandern > 0 && tWandern < 1.05) {
+      const fx = misch(mitte(3), mitte(ende), weich(tWandern));
+      for (let k = 0; k < 8; k++) {
+        const p = (t * 1.6 + k / 8) % 1;
+        licht(fx + Math.sin(k * 2.1) * 46 - p * 30, kappe + 20 - p * 70 + Math.cos(k) * 10, 6 * (1 - p) + 3, k % 2 ? w.band : w.stern, (1 - p) * .8 * Math.sin(Math.PI * klemm(tWandern * 1.1)));
+      }
+    }
+  }
+
+  const ENDE = 6.0, TEMPO = 1.25, HOEHE = 300;
+  const splash = $('splash'), sc = $('splashcv');
+  let lauf = 0;
+  function schliessen() { lauf++; splash.classList.add('off'); }
+  function abspielen() {
+    const my = ++lauf, c2 = sc.getContext('2d');
+    const hell = document.documentElement.dataset.theme === 'light';
+    TINTE = hell ? '#1c2a22' : '#fdf8ef';
+    Object.assign(WORTE.imagiclique, hell ? { farben: ['#15803d', '#16a34a'], stern: '#16a34a', band: '#4ade80' }
+                                          : { farben: ['#4ade80', '#86efac'], stern: '#22c55e', band: '#86efac' });
+    c2.font = `700 ${GROESSE}px "Josefin Sans"`;
+    const breite = c2.measureText(WORTE.imagiclique.text).width + 2 * RAND;
+    const cssW = Math.min(innerWidth * .9, 560), k = cssW / breite, dpr = Math.min(devicePixelRatio || 1, 3);
+    sc.width = Math.ceil(cssW * dpr); sc.height = Math.ceil(HOEHE * k * dpr);
+    sc.style.width = cssW + 'px'; sc.style.height = HOEHE * k + 'px';
+    splash.classList.remove('off');
+    const still = matchMedia('(prefers-reduced-motion: reduce)').matches, t0 = performance.now();
+    const bild = jetzt => {
+      if (my !== lauf) return;
+      const t = still ? ENDE : Math.min((jetzt - t0) / 1000 * TEMPO, ENDE);
+      c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, sc.width, sc.height); c2.setTransform(k * dpr, 0, 0, k * dpr, 0, 0);
+      zeichne(c2, 'imagiclique', t);
+      if (t < ENDE) requestAnimationFrame(bild);
+      else setTimeout(() => { if (my === lauf) schliessen(); }, still ? 900 : 600);
+    };
+    requestAnimationFrame(bild);
+  }
+  splash.onclick = schliessen;
+  $('logo').onclick = abspielen; $('replay').onclick = abspielen;
+  // ohne die Schrift (z. B. erster Start ohne Netz) lieber gleich zur App als ein falsches Schriftbild zeigen
+  const schrift = document.fonts && document.fonts.load ? document.fonts.load(`700 ${GROESSE}px "Josefin Sans"`) : Promise.reject();
+  Promise.race([schrift, new Promise((_, no) => setTimeout(no, 2500))])
+    .then(f => { if (f && f.length === 0) throw 0; abspielen(); }).catch(schliessen);
+})();
+
+// --- App: Installation, Offline, geteilte Fotos ---
+let installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEvt = e; $('install').hidden = false; });
+$('install').onclick = async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $('install').hidden = true; };
+window.addEventListener('appinstalled', () => { $('install').hidden = true; });
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+
+// Fotos, die aus der Galerie an die App geteilt wurden (siehe sw.js)
+(async () => {
+  if (!new URLSearchParams(location.search).has('shared') || !('caches' in window)) return;
+  history.replaceState(null, '', location.pathname);
+  try {
+    const cache = await caches.open(SHARED_CACHE);
+    const files = [];
+    for (const req of await cache.keys()) {
+      const res = await cache.match(req); if (!res) continue;
+      if (req.url.endsWith('/meta')) {
+        const m = await res.json();
+        if (m.text) { state.text = m.text; $('text').value = m.text; }
+      } else files.push(await res.blob());
+    }
+    await caches.delete(SHARED_CACHE);
+    state.photos.forEach(p => URL.revokeObjectURL(p.url)); state.photos = [];
+    await addFiles(files);
+  } catch (e) { toast('Die geteilten Fotos konnten nicht übernommen werden.'); }
+})();
+
+drawThumbs(); go(1);
+const ready = document.fonts ? Promise.all([
+  document.fonts.load('800 80px Inter'), document.fonts.load('400 40px Inter'),
+  document.fonts.load('800 80px "Playfair Display"'), document.fonts.load('600 60px "Playfair Display"'),
+]).catch(() => {}) : Promise.resolve();
+render(); ready.then(render);
+</script>
+</body>
+</html>
